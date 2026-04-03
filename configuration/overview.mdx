@@ -1,0 +1,263 @@
+---
+title: "Configuration overview"
+description: "Configure lazygit using a YAML file — customize the UI, git behavior, keybindings, custom commands, pagers, and more."
+---
+
+lazygit is configured through a `config.yml` file. The configuration supports global settings, per-repository overrides, and directory-scoped settings for groups of repositories.
+
+## Config file location
+
+<Tabs>
+  <Tab title="Linux">
+    ```
+    ~/.config/lazygit/config.yml
+    ```
+  </Tab>
+  <Tab title="macOS">
+    ```
+    ~/Library/Application Support/lazygit/config.yml
+    ```
+  </Tab>
+  <Tab title="Windows">
+    ```
+    %LOCALAPPDATA%\lazygit\config.yml
+    ```
+    The file is also found in `%APPDATA%\lazygit\config.yml` if present.
+  </Tab>
+</Tabs>
+
+<Note>
+  If you upgraded from an older version of lazygit, your config may be in a legacy path that includes `jesseduffield` in the directory name (e.g. `~/.config/jesseduffield/lazygit/config.yml`). Both locations are supported.
+</Note>
+
+You can override the config directory with the `CONFIG_DIR` environment variable, or point to a specific config file using the `--use-config-file` flag or the `LG_CONFIG_FILE` environment variable:
+
+```bash
+LG_CONFIG_FILE="$HOME/.base_lg_conf,$HOME/.light_theme_lg_conf" lazygit
+```
+
+When multiple comma-separated paths are given, they are merged in order — later files take precedence.
+
+## Repo-specific config
+
+In addition to the global config, lazygit loads configuration from two additional locations:
+
+- **`<repo>/.git/lazygit.yml`** — settings specific to a single repository
+- **`.lazygit.yml`** in any parent directory of the repo — useful for settings shared across a group of related repositories
+
+Settings in these files override the global config.
+
+## IntelliSense in VS Code
+
+lazygit ships a JSON schema for `config.yml`. When you install the [YAML extension by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml), VS Code will automatically provide completions and error checking if your config file is in one of the standard locations above.
+
+If you've moved the config file to a custom path, add this comment to the top of the file to activate the schema manually:
+
+```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/jesseduffield/lazygit/master/schema/config.json
+```
+
+## Config sections
+
+<AccordionGroup>
+  <Accordion title="gui — UI appearance and behavior">
+    Controls visual layout, themes, fonts, and interaction preferences.
+
+    Key options:
+
+    | Option | Default | Description |
+    |--------|---------|-------------|
+    | `sidePanelWidth` | `0.3333` | Fraction of screen width for the left panel |
+    | `theme` | — | Border colors, selected line colors, and more |
+    | `nerdFontsVersion` | `""` | Enable Nerd Fonts icons (`"2"` or `"3"`) |
+    | `border` | `rounded` | Window border style: `rounded`, `single`, `double`, `hidden`, `bold` |
+    | `language` | `auto` | UI language: `auto`, `en`, `zh-CN`, `zh-TW`, `pl`, `nl`, `ja`, `ko`, `ru`, `pt` |
+    | `filterMode` | `substring` | How `/` filtering works: `substring` or `fuzzy` |
+    | `screenMode` | `normal` | Default focused window size: `normal`, `half`, `full` |
+    | `timeFormat` | `02 Jan 06` | Go time format for displaying commit timestamps |
+    | `showFileTree` | `true` | Show files as a tree (vs flat list) |
+    | `mouseEvents` | `true` | Capture mouse events |
+
+    ```yaml
+    gui:
+      nerdFontsVersion: "3"
+      border: rounded
+      sidePanelWidth: 0.3333
+      theme:
+        activeBorderColor:
+          - green
+          - bold
+        selectedLineBgColor:
+          - blue
+    ```
+  </Accordion>
+
+  <Accordion title="git — git behavior and log display">
+    Controls how lazygit interacts with git — fetching, merging, log display, diff context, and more.
+
+    Key options:
+
+    | Option | Default | Description |
+    |--------|---------|-------------|
+    | `autoFetch` | `true` | Periodically fetch from remote |
+    | `autoRefresh` | `true` | Periodically refresh files and submodules |
+    | `fetchAll` | `true` | Pass `--all` to `git fetch` |
+    | `diffContextSize` | `3` | Lines of context shown around each diff hunk |
+    | `skipHookPrefix` | `WIP` | Commit message prefix to skip pre-commit hooks |
+    | `mainBranches` | `[master, main]` | Branches considered "main" for log display |
+    | `log.order` | `topo-order` | Commit sort order: `date-order`, `author-date-order`, `topo-order`, `default` |
+    | `log.showGraph` | `always` | Show git graph: `always`, `never`, `when-maximised` |
+    | `pagers` | `[]` | Custom pagers (delta, diff-so-fancy, ydiff, difftastic) |
+
+    ```yaml
+    git:
+      autoFetch: true
+      diffContextSize: 5
+      log:
+        order: topo-order
+        showGraph: always
+    ```
+  </Accordion>
+
+  <Accordion title="keybinding — key remapping">
+    Override default keybindings per context. See the [keybindings page](/configuration/keybindings) for full documentation.
+
+    ```yaml
+    keybinding:
+      universal:
+        quit: q
+        scrollUpMain: <pgup>
+        scrollDownMain: <pgdown>
+      commits:
+        squashDown: s
+        renameCommit: r
+    ```
+  </Accordion>
+
+  <Accordion title="customCommands — user-defined commands">
+    Define your own keybindings that run arbitrary shell commands with optional user prompts. See the [custom commands page](/configuration/custom-commands) for full documentation.
+
+    ```yaml
+    customCommands:
+      - key: '<c-r>'
+        context: 'commits'
+        command: 'hub browse -- "commit/{{.SelectedLocalCommit.Hash}}"'
+    ```
+  </Accordion>
+
+  <Accordion title="update — update check behavior">
+    Controls how lazygit checks for new versions.
+
+    | Option | Default | Description |
+    |--------|---------|-------------|
+    | `method` | `prompt` | `prompt`, `background`, or `never` |
+    | `days` | `14` | Days between update checks |
+
+    ```yaml
+    update:
+      method: background
+      days: 7
+    ```
+  </Accordion>
+
+  <Accordion title="services — custom pull request URLs">
+    Map git domains to web domains for on-premises git providers (GitLab, GitHub Enterprise, Gitea, etc.).
+
+    ```yaml
+    services:
+      'git.work.com': 'gitlab:gitservice.work.com'
+    ```
+
+    Supported providers: `github`, `bitbucket`, `bitbucketServer`, `azuredevops`, `gitlab`, `gitea`, `codeberg`.
+  </Accordion>
+
+  <Accordion title="notARepository — behavior outside a repo">
+    Controls what happens when you open lazygit outside of a git repository.
+
+    | Value | Behavior |
+    |-------|----------|
+    | `prompt` | Ask whether to initialize a new repo (default) |
+    | `create` | Initialize a new repo without asking |
+    | `skip` | Open the most recent repo |
+    | `quit` | Exit lazygit |
+
+    ```yaml
+    notARepository: prompt
+    ```
+  </Accordion>
+
+  <Accordion title="os — editor and clipboard commands">
+    Configure how lazygit opens files and editors.
+
+    ```yaml
+    os:
+      editPreset: 'vscode'  # vim, nvim, nvim-remote, vscode, sublime, helix, zed, etc.
+    ```
+
+    For custom editor commands:
+
+    ```yaml
+    os:
+      edit: 'myeditor {{filename}}'
+      editAtLine: 'myeditor --line={{line}} {{filename}}'
+      editAtLineAndWait: 'myeditor --block --line={{line}} {{filename}}'
+      editInTerminal: true
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Example config
+
+The following is a practical starting-point config covering common customizations. Only include settings you want to change — you don't need to copy the full default config.
+
+```yaml
+gui:
+  nerdFontsVersion: "3"
+  border: rounded
+  sidePanelWidth: 0.3333
+  theme:
+    activeBorderColor:
+      - green
+      - bold
+    selectedLineBgColor:
+      - blue
+  showFileTree: true
+  filterMode: substring
+
+git:
+  autoFetch: true
+  fetchAll: true
+  diffContextSize: 3
+  skipHookPrefix: WIP
+  log:
+    order: topo-order
+    showGraph: always
+  mainBranches:
+    - master
+    - main
+
+os:
+  editPreset: vscode
+
+update:
+  method: prompt
+  days: 14
+```
+
+<Tip>
+  Open your config file directly from within lazygit by pressing `e` in the **Status** panel.
+</Tip>
+
+## Related pages
+
+<CardGroup cols={3}>
+  <Card title="Keybindings" icon="keyboard" href="/configuration/keybindings">
+    Remap default keys and disable bindings you don't use.
+  </Card>
+  <Card title="Custom commands" icon="terminal" href="/configuration/custom-commands">
+    Extend lazygit with your own shell commands and prompts.
+  </Card>
+  <Card title="Custom pagers" icon="eye" href="/configuration/custom-pagers">
+    Integrate delta, diff-so-fancy, ydiff, and difftastic.
+  </Card>
+</CardGroup>

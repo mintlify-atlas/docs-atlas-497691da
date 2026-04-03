@@ -1,0 +1,330 @@
+---
+title: "Codebase guide"
+description: "An orientation to the lazygit package structure, core concepts, event loop, and how to add a new feature."
+---
+
+This guide explains what the different packages in the codebase are for, where important files live, and how the major systems fit together. Read this before making your first contribution.
+
+<Tip>
+  The [PR walkthrough video](https://www.youtube.com/watch?v=kNavnhzZHtk) walks through adding a small feature end-to-end and is a good companion to this document.
+</Tip>
+
+## Package overview
+
+The lazygit codebase is a Go module (`github.com/jesseduffield/lazygit`). Nearly all application code lives under `pkg/`.
+
+<AccordionGroup>
+  <Accordion title="pkg/app — startup and initialisation">
+    Contains startup code that initialises logging, the user config, and other dependencies before handing control to the GUI. It also catches and handles errors raised by the GUI.
+
+    `pkg/app/daemon` is a related sub-package for a short-lived background process that lazygit passes to git for certain tasks, such as acting as `GIT_EDITOR` when setting the TODO file for an interactive rebase.
+  </Accordion>
+  <Accordion title="pkg/commands — all git and OS communication">
+    All communication with the git binary happens here.
+
+    | Sub-package | Purpose |
+    |---|---|
+    | `pkg/commands/git_commands` | Methods like `Checkout`, `Rebase`, `Push` that invoke `git` |
+    | `pkg/commands/oscommands` | Talking to the OS and invoking arbitrary commands |
+    | `pkg/commands/git_config` | Reading the git config |
+    | `pkg/commands/hosting_service` | Logic specific to git hosting services (GitHub, GitLab, etc.) |
+    | `pkg/commands/models` | Model structs representing commits, branches, files, etc. |
+    | `pkg/commands/patch` | Parsing and working with git patches |
+  </Accordion>
+  <Accordion title="pkg/config — user configuration">
+    Contains code for the lazygit user config. `pkg/config/user_config.go` defines the user config struct and its default values.
+
+    The `UserConfig` can be reloaded at runtime (e.g. when the user edits a config file). Most code accesses it via a pointer inside the `common.Common` struct so that it always sees the current value without any extra bookkeeping. See [Using UserConfig](#using-userconfig) below.
+  </Accordion>
+  <Accordion title="pkg/gui — the terminal UI">
+    The largest package. It still contains a top-level `Gui` God Struct for historical reasons, but over time code has been migrated into contexts, controllers, and helpers. The sub-packages are:
+
+    | Sub-package | Purpose |
+    |---|---|
+    | `pkg/gui/context` | One context per view; manages view state and receives keypresses |
+    | `pkg/gui/controllers` | Keybinding definitions and their handlers |
+    | `pkg/gui/controllers/helpers` | Code shared between multiple controllers |
+    | `pkg/gui/presentation` | Rendering content inside views |
+    | `pkg/gui/popup` | Raising confirmation dialogs and input prompts |
+    | `pkg/gui/filetree` | File tree representation |
+    | `pkg/gui/mergeconflicts` | Merge conflict handling |
+    | `pkg/gui/modes` | State for modes like cherry-pick and rebase |
+    | `pkg/gui/patch_exploring` | State for patch-oriented views (staging, etc.) |
+    | `pkg/gui/style` | Text styles (colour, bold, etc.) |
+    | `pkg/gui/types` | GUI-specific types and interfaces (lives here to avoid circular imports) |
+    | `pkg/gui/keybindings` | Mapping between keybindings and their labels |
+    | `pkg/gui/status` | Loaders and toast notifications |
+    | `pkg/gui/services/custom_commands` | User-defined custom commands |
+  </Accordion>
+  <Accordion title="pkg/i18n — internationalisation">
+    All user-facing strings. `pkg/i18n/english.go` defines the `TranslationSet` struct and provides English values. To add a new string, add a field to `TranslationSet` and provide its value in `EnglishTranslationSet()`. Access it anywhere via `self.c.Tr.YourNewField`.
+
+    Translations are managed through [Crowdin](https://crowdin.com/project/lazygit/). The files in `pkg/i18n/translations/` are maintained by the maintainers.
+  </Accordion>
+  <Accordion title="pkg/integration — end-to-end tests">
+    The integration test framework. Tests live in `pkg/integration/tests/`. See the [Integration tests](#integration-tests) section below.
+  </Accordion>
+  <Accordion title="Other packages">
+    | Package | Purpose |
+    |---|---|
+    | `pkg/common` | The `Common` struct holding shared dependencies (logger, i18n, config) |
+    | `pkg/constants` | Constant strings such as links to docs |
+    | `pkg/env` | Getting and setting environment variables |
+    | `pkg/logs` | Logger instantiation and `lazygit --logs` log tailing |
+    | `pkg/tasks` | Asynchronous tasks for efficiently rendering command output |
+    | `pkg/theme` | Colour theme logic |
+    | `pkg/updates` | Checking for and applying lazygit updates |
+    | `pkg/utils` | Low-level helper functions |
+    | `pkg/cheatsheet` | Generator for keybinding cheatsheets in `docs/keybindings/` |
+    | `pkg/jsonschema` | Generator for the user config JSON schema |
+    | `vendor/github.com/jesseduffield/gocui` | The underlying library for the event loop, keypress handling, and rendering |
+  </Accordion>
+</AccordionGroup>
+
+## Core concepts
+
+Understanding these four concepts is essential before reading or modifying any GUI code.
+
+### View
+
+A `View` is defined in the `gocui` package. It maintains an internal buffer of content that is rendered each time the screen is redrawn.
+
+### Context
+
+A **context** is tied to a view and contains the additional state and logic specific to that view. For example, the branches context holds code for writing the list of branches to the branches view, and manages the selected branch.
+
+There is one context per view, defined in `pkg/gui/context/`. The list of all contexts is in `pkg/gui/context/context.go`, and their initialisation code is in `pkg/gui/context/setup.go`.
+
+### Controller
+
+A **controller** defines a set of keybindings and their associated handlers. A controller can be assigned to multiple contexts, and a context can have multiple controllers. For example, the list controller handles navigation keybindings (`j`/`k`, `enter`, etc.) and is shared by every list context.
+
+Controllers live in `pkg/gui/controllers/`. They sit at the top of the dependency hierarchy and can refer to helpers, contexts, and views.
+
+### Helper
+
+A **helper** defines shared code used by multiple controllers. When a method in one controller needs to be used by another controller, it is extracted into a helper so both can access it without controllers depending on each other.
+
+Helpers live in `pkg/gui/controllers/helpers/`. They can refer to contexts and views but not to other controllers.
+
+```
+Controllers  →  Helpers  →  Contexts  →  Views
+```
+
+<Note>
+  There is currently no strict rule about whether new code should start in a controller or a helper. The working convention is: put it in a controller until another controller needs it, then extract it into a helper. Helpers may also be the better default if your code is clearly shared from the start.
+</Note>
+
+### Other terms
+
+| Term | Meaning |
+|---|---|
+| **Window** | A section of the screen that renders a view. Named after the default view that appears there (e.g. the "stash" window). Pressing enter on an item can bring a different view into the same window. |
+| **Panel** | Deprecated term for view or window. |
+| **Tab** | Each tab in a window (e.g. Files, Worktrees, Submodules) has a corresponding view that is brought to the front when the tab is selected. |
+| **Model** | A struct representing a git object: commit, branch, file, etc. Lives in `pkg/commands/models`. |
+| **ViewModel** | State maintained by a context related to its view (e.g. the selected item index). |
+| **Keybinding** | Associates a key with an action. |
+| **Action** | What happens when a key is pressed. May invoke a git command or perform a pure UI operation. |
+| **Common struct** | Most structs have a field named `c` that holds a `Common` struct containing shared dependencies (logger, config, helpers, etc.). Access helpers with `self.c.Helpers.MyHelper`. |
+
+## Important files
+
+| File | Purpose |
+|---|---|
+| `pkg/gui/gui.go` | Top-level GUI state and initialisation/run code |
+| `pkg/gui/layout.go` | Called on every render; lays out windows and invokes on-render hooks |
+| `pkg/gui/context.go` | Context lifecycle, the context stack, and focus changes |
+| `pkg/gui/context/context.go` | Definitions of all contexts |
+| `pkg/gui/context/setup.go` | Initialisation code for all contexts |
+| `pkg/gui/controllers.go` | Links controllers to their contexts |
+| `pkg/gui/controllers/helpers/helpers.go` | Definitions of all helper structs |
+| `pkg/gui/controllers/helpers/refresh_helper.go` | Refreshes models after actions (e.g. reload branches after a pull) |
+| `pkg/gui/controllers/helpers/window_arrangement_helper.go` | UI layout: size and position of each window |
+| `pkg/gui/controllers/quit_actions.go` | What happens when you press escape on a view |
+| `pkg/gui/keybindings.go` | Keybindings not yet migrated to a controller |
+| `pkg/gui/views.go` | View ordering (front to back) and view initialisation |
+| `pkg/gui/gui_common.go` | GUI-specific methods available to all controllers and helpers |
+| `pkg/gui/types/views.go` | View type definitions |
+| `pkg/config/user_config.go` | User config struct and default values |
+| `pkg/i18n/english.go` | All i18n strings and their English values |
+| `pkg/commands/git.go` | All git command structs |
+| `vendor/github.com/jesseduffield/gocui/gui.go` | The gocui GUI struct and the main event loop (`MainLoop`) |
+| `vendor/github.com/jesseduffield/gocui/view.go` | The gocui View struct |
+
+## Event loop and threading
+
+The event loop lives in `MainLoop` in `vendor/github.com/jesseduffield/gocui/gui.go`. Any event — keypress, window resize, or programmatically enqueued update — causes the event to be processed and the screen to be redrawn by calling the `layout` function in `pkg/gui/layout.go`.
+
+### Worker goroutines
+
+When a keypress handler needs to run something that would block the UI (such as a git command), it runs it asynchronously on a worker goroutine:
+
+```go
+self.c.OnWorker(func(task gocui.Task) {
+    // runs off the UI goroutine
+    result := doSlowThing()
+    self.c.OnUIThread(func() error {
+        // back on the UI goroutine to update state
+        return self.handleResult(result)
+    })
+})
+```
+
+`OnWorker` registers the goroutine as "busy" before spawning it. This is important for the integration test system, which waits until lazygit is idle before proceeding to the next assertion.
+
+### Background goroutines
+
+Periodic background work (such as auto-fetching every minute) runs as a background goroutine and does **not** count as "busy":
+
+```go
+go utils.Safe(func() {
+    // periodic background work
+})
+```
+
+`utils.Safe` ensures the GUI is cleaned up if the goroutine panics.
+
+## Using UserConfig
+
+The `UserConfig` struct is loaded from the global lazygit config file (and optional repo-specific config files). It can be reloaded at runtime when the user edits a config file.
+
+In most controllers and helpers you already have a pointer to `common.Common`, which contains the current `UserConfig`. Because the pointer target is updated on reload, your code always sees the latest values automatically — no extra work needed.
+
+```go
+// Access config anywhere you have self.c
+maxCommitLength := self.c.UserConfig().Git.Commit.MaxCommitMsgLen
+```
+
+If you need to react to a config reload (for example, to re-apply a color scheme), add code to `Gui.onUserConfigLoaded`. If that is not practical, add the config key to `Gui.checkForChangedConfigsThatDontAutoReload` so lazygit prompts the user to restart.
+
+## Adding a new feature
+
+Here is the general pattern for adding a keybinding that does something in the GUI.
+
+<Steps>
+  <Step title="Identify or create the right context">
+    Find which context owns the view where your keybinding should live (`pkg/gui/context/`). If you need a new context, define it in `pkg/gui/context/context.go` and initialise it in `pkg/gui/context/setup.go`.
+  </Step>
+  <Step title="Add a controller or extend an existing one">
+    Controllers live in `pkg/gui/controllers/`. Find an existing controller for your context, or create a new one. Implement the `GetKeybindings` method to return a slice of `types.Binding` values, each associating a key with a handler function.
+
+    ```go
+    func (self *MyController) GetKeybindings(opts types.KeybindingsOpts) []*types.Binding {
+        return []*types.Binding{
+            {
+                Key:     opts.GetKey(opts.Config.Universal.Select),
+                Handler: self.handleSelect,
+            },
+        }
+    }
+    ```
+  </Step>
+  <Step title="Wire the controller to its context">
+    Register the controller in `pkg/gui/controllers.go` by calling `self.linkController(context, controller)`.
+  </Step>
+  <Step title="Add git commands if needed">
+    If your feature involves a new git operation, add a method to the appropriate struct in `pkg/commands/git_commands/`. Use `self.cmd.New(args).Run()` or similar helpers for invoking git.
+  </Step>
+  <Step title="Add user-facing strings">
+    Add any new strings as fields on `TranslationSet` in `pkg/i18n/english.go` and provide English values in `EnglishTranslationSet()`. Access them as `self.c.Tr.YourNewField`.
+  </Step>
+  <Step title="Call the refresh helper after mutations">
+    After any action that changes git state, call the appropriate refresh method from `pkg/gui/controllers/helpers/refresh_helper.go` so that affected views reload their data.
+
+    ```go
+    return self.c.Refresh(types.RefreshOptions{
+        Mode:  types.ASYNC,
+        Scope: []types.RefreshableView{types.COMMITS, types.BRANCHES},
+    })
+    ```
+  </Step>
+  <Step title="Write an integration test">
+    Add a test in `pkg/integration/tests/` to verify your feature works end to end. See [Integration tests](#integration-tests) below.
+  </Step>
+</Steps>
+
+## Integration tests
+
+Integration tests run a real lazygit session with a scripted robot driving the UI, and then assert on the final state.
+
+### Structure
+
+Each test file in `pkg/integration/tests/` exports a value that implements the test interface with two methods:
+
+- **Setup** — prepares a git repository using shell commands (creating commits, conflicts, branches, etc.)
+- **Run** — drives the lazygit UI by pressing keys, selecting list items, and making assertions
+
+```go
+var MyTest = NewIntegrationTest(NewIntegrationTestArgs{
+    Description: "Demonstrates creating a fixup commit",
+    SetupRepo: func(shell *Shell) {
+        shell.CreateFile("file.txt", "content")
+        shell.GitAddAll()
+        shell.Commit("initial commit")
+    },
+    Run: func(t *TestDriver, keys *KeyboardKeys) {
+        t.Views().Commits().
+            Focus().
+            SelectedLine(Contains("initial commit")).
+            Press(keys.Commits.CreateFixupCommit)
+
+        t.Views().Commits().
+            Lines(
+                Contains("fixup! initial commit"),
+                Contains("initial commit"),
+            )
+    },
+})
+```
+
+Register the test in `pkg/integration/tests/test_list.go` by running:
+
+```bash
+go generate ./...
+```
+
+The test name is derived from its file path: a test at `pkg/integration/tests/commit/new_branch.go` has the name `commit/new_branch`.
+
+### Running integration tests
+
+```bash
+# Interactive TUI (recommended for development)
+go run cmd/integration_test/main.go tui
+
+# Run all tests from the CLI
+go run cmd/integration_test/main.go cli
+
+# Run a specific test
+go run cmd/integration_test/main.go cli commit/new_branch
+
+# Run in slow motion to watch what the robot does
+go run cmd/integration_test/main.go cli --slow commit/new_branch
+
+# Run in sandbox mode (you drive the UI instead of the robot)
+go run cmd/integration_test/main.go cli --sandbox commit/new_branch
+
+# Run via go test (for CI)
+go test pkg/integration/clients/*.go
+```
+
+<Note>
+  Failed test results are stored in `test/_results/`. Inspect the repo there if you need to understand what state lazygit was in when an assertion failed.
+</Note>
+
+### Tips for writing good tests
+
+- **Do as much setup as possible in the `SetupRepo` step.** If you are testing merge conflict resolution, create the conflict in setup — not in the run step. This keeps the run step focused and the test faster.
+- **Keep tests short and focused.** Test one piece of behavior per test. Compose multiple short tests rather than one large one.
+- **Create `shared.go` for repeated logic.** If several tests in the same directory share helper logic, put it in a `shared.go` file in that directory. Cross-directory helpers go in the `tests/shared` package.
+- **Add helpers to `components/common.go`** if you find yourself doing the same UI interaction across many tests (for example, dismissing a specific popup).
+
+## Legacy code structure
+
+Before the controller/context/helper split, all code lived directly in the `Gui` struct. That migration is ongoing. If you encounter code that seems like it belongs in a controller or helper but is still on the `Gui` struct, that is legacy code waiting to be moved — feel free to migrate it as part of a refactoring commit.
+
+Similarly, `pkg/gui/keybindings.go` still contains keybindings that have not yet been moved to their own controllers. New keybindings should always go in a controller, not in that file.
+
+## Profiling
+
+If you need to investigate CPU or memory usage, see the [profiling guide](https://github.com/jesseduffield/lazygit/blob/master/docs/dev/Profiling.md) in the repository.

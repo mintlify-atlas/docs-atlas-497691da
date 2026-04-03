@@ -1,0 +1,91 @@
+---
+title: "Filtering and searching"
+description: "Narrow down commits, files, and other views with text filters, commit log filters, and in-view search."
+---
+
+lazygit provides two distinct modes for finding things: **filtering**, which narrows the list to only matching items, and **searching**, which highlights matches in place so you can see context around them. Both are triggered with `/`.
+
+## Filtering vs. searching
+
+The behavior of `/` depends on the active view:
+
+| Mode | What it does |
+|------|-------------|
+| **Filter** | The list is narrowed to only items that match the query. Non-matching items are hidden. |
+| **Search** | All items remain visible. Matching items are highlighted, and you can jump between them. |
+
+Most list views (branches, stash, etc.) use filter mode. The commits view uses search mode, because you typically need to see the commits that come before and after the one you are looking for.
+
+<Note>
+The files view currently uses search mode. Filter support for files is planned.
+</Note>
+
+## Using the filter/search prompt
+
+<Steps>
+  <Step title="Open the prompt">
+    Press `/` in any panel. A prompt appears at the bottom of the screen.
+  </Step>
+  <Step title="Type your query">
+    Start typing. The view updates in real time as you type.
+  </Step>
+  <Step title="Navigate matches">
+    In search mode, press `n` to move to the next match and `N` to move to the previous match.
+  </Step>
+  <Step title="Clear the filter">
+    Press `escape` to dismiss the prompt and restore the full view.
+  </Step>
+</Steps>
+
+## Filtering files by status
+
+In the **Files** panel, press `ctrl+b` to toggle a status filter. This cycles through showing all files, staged files only, and unstaged files only. This is separate from the text filter and is useful for reviewing what you are about to commit.
+
+## Filtering the commit log
+
+The commit log has additional, more powerful filtering options that go beyond text matching.
+
+### Opening the filter menu
+
+Press `ctrl+s` anywhere in the UI to open the commit log filter options. From this menu you can:
+
+- **Filter by path** — Show only commits that changed a specific file or directory.
+- **Filter by author** — Show only commits from a particular author.
+- **Filter by search term** — Filter the log by a string that matches commit messages.
+- **Toggle `--all`** — Show commits from all branches and refs in the log, not just the current branch.
+
+### Filtering by file path
+
+To filter the commit log to only show commits that touched a particular file:
+
+<Tabs>
+  <Tab title="From within lazygit">
+    Press `ctrl+s` to open the filter menu, then choose the path filter option and enter a file path.
+  </Tab>
+  <Tab title="From the command line">
+    Launch lazygit with the `-f` flag:
+
+    ```bash
+    lazygit -f path/to/file
+    ```
+  </Tab>
+</Tabs>
+
+### The `--all` flag
+
+By default, the commit log shows commits reachable from the current branch. Enabling the `--all` option (via the `ctrl+s` menu) is equivalent to passing `--all` to `git log`, which includes commits from all branches, tags, and other refs. This is useful for finding a commit you know exists somewhere in the repository but are not sure which branch it is on.
+
+## Searching within a diff or file view
+
+When the main panel is showing a diff or file contents, you can also press `/` to search within it. Matches are highlighted, and `n` / `N` navigate between them just as in list views.
+
+## Keybinding reference
+
+| Key | Action |
+|-----|--------|
+| `/` | Open the filter/search prompt in the current view |
+| `n` | Jump to the next search match |
+| `N` | Jump to the previous search match |
+| `escape` | Clear the filter and close the prompt |
+| `ctrl+b` | Filter the files view by staged/unstaged status |
+| `ctrl+s` | Open commit log filter options (author, path, term, `--all`) |

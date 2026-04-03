@@ -1,0 +1,147 @@
+---
+title: "Branches"
+description: "Create, checkout, merge, rebase, delete, and track branches — including GitHub PR integration and Gitflow support."
+---
+
+The **Branches** panel lists your local branches. From here you can check out branches, create new ones, merge or rebase, manage upstream tracking, push and pull, and work with GitHub pull requests.
+
+## Checking out a branch
+
+Press `space` on any branch to check it out. If you have uncommitted changes, lazygit will warn you before switching.
+
+<Tip>
+Press `c` to check out a branch by typing its name. Enter `-` to switch to the previous branch — the same as `git checkout -`.
+</Tip>
+
+| Key | Action |
+|-----|--------|
+| `space` | Checkout selected branch |
+| `c` | Checkout branch by name (type in a prompt) |
+| `-` | Checkout previous branch |
+| `F` | Force checkout (discards all local working tree changes) |
+
+## Creating branches
+
+Press `n` in the **Branches** panel to create a new branch. You'll be prompted for a name. The new branch is created from the current HEAD.
+
+To create a branch from a specific commit, navigate to the **Commits** panel and press `n` on the commit.
+
+To move unpushed commits from the current branch to a new branch, press `N`. lazygit will let you choose whether to create the new branch from the main branch or stack it on top of the current one.
+
+## Deleting branches
+
+Press `d` on a branch to view delete options:
+
+- **Delete local branch** — removes the local branch (git will warn if it has unmerged changes)
+- **Delete remote branch** — removes the branch from the remote
+
+## Merging
+
+Press `shift+m` (shown as `M`) on a branch to merge it into your currently checked-out branch. You can choose between a regular merge or a squash merge.
+
+| Key | Action |
+|-----|--------|
+| `M` | View merge options for the selected branch |
+
+<Note>
+After a merge conflict, lazygit will switch to the conflict resolution view. Use `space` to pick a hunk, `z` to undo a resolution, and `M` to view merge options including aborting or continuing.
+</Note>
+
+## Fast-forwarding
+
+Press `f` on a branch to fast-forward it from its upstream. This only works when no diverging commits exist — it's equivalent to `git merge --ff-only`.
+
+## Rebasing onto a branch
+
+Press `r` on a branch in the **Branches** panel to rebase your currently checked-out branch onto the selected branch. This is equivalent to `git rebase <selected-branch>`.
+
+See the [Rebasing](/features/rebasing) page for interactive rebase details and the rebase-onto workflow.
+
+## Tracking remote branches
+
+Press `u` on a branch to view upstream options:
+
+- **Set upstream** — configure which remote branch this local branch tracks
+- **Unset upstream** — remove the upstream tracking relationship
+- **Reset to upstream** — reset the local branch to match the remote
+
+## Pushing and pulling
+
+| Key | Action |
+|-----|--------|
+| `shift+p` (`P`) | Push the current branch to its upstream |
+| `p` | Pull changes from the remote for the current branch |
+
+These are global keybindings available from any panel. If no upstream is configured, lazygit prompts you to set one.
+
+## Remote branches
+
+Navigate to the **Remotes** panel (press `[` / `]` to switch tabs) to explore remote branches. From the **Remote branches** sub-view you can:
+
+- `space` — Checkout a new local branch tracking the selected remote branch
+- `r` — Rebase the checked-out branch onto the remote branch
+- `M` — Merge the remote branch into the current branch
+- `d` — Delete the remote branch from the remote
+- `u` — Set the remote branch as the upstream of the current local branch
+
+## GitHub PR integration
+
+When the [`gh`](https://cli.github.com/) CLI is installed and authenticated (`gh auth login`), lazygit automatically shows GitHub pull request status next to branch names in the **Branches** panel. No additional configuration is required.
+
+The PR icon color indicates the PR state:
+
+| Icon color | PR state |
+|------------|---------|
+| Green | Open |
+| Purple | Merged |
+| Red | Closed |
+
+Press `G` (shift+g) on a branch with a PR to open it in your browser.
+
+<Note>
+PR integration requires the `gh` CLI to be installed and you to be authenticated via `gh auth login`. lazygit reads PR data from GitHub in the background — no token configuration in lazygit itself is needed.
+</Note>
+
+### Creating a pull request
+
+Press `o` on any branch to create a pull request for it. Press `O` to view additional PR creation options. Press `ctrl+y` to copy the PR URL to your clipboard.
+
+## Gitflow support
+
+lazygit supports [Gitflow](https://nvie.com/posts/a-successful-git-branching-model/) if you have the `git-flow` tool installed.
+
+Press `i` in the **Branches** panel to open the Gitflow options menu. From there you can start features, releases, hotfixes, and support branches, or finish them according to the Gitflow model.
+
+<Note>
+Gitflow support requires the `git-flow` CLI to be installed separately. If it is not installed, the `i` key will show an error.
+</Note>
+
+## Branches panel keybindings reference
+
+| Key | Action |
+|-----|--------|
+| `space` | Checkout selected branch |
+| `c` | Checkout by name |
+| `-` | Checkout previous branch |
+| `F` | Force checkout |
+| `n` | New branch |
+| `N` | Move unpushed commits to a new branch |
+| `d` | View delete options (local/remote) |
+| `r` | Rebase checked-out branch onto selected |
+| `M` | Merge selected branch into current |
+| `f` | Fast-forward from upstream |
+| `R` | Rename branch |
+| `u` | View upstream options |
+| `g` | Reset (soft/mixed/hard) |
+| `s` | Change sort order |
+| `i` | Show Gitflow options |
+| `o` | Create pull request |
+| `O` | View pull request creation options |
+| `ctrl+y` | Copy pull request URL to clipboard |
+| `G` | Open pull request in browser (if one exists for the branch) |
+| `T` | Create a new tag |
+| `enter` | View commits on this branch |
+| `w` | View worktree options |
+| `ctrl+o` | Copy branch name to clipboard |
+| `ctrl+t` | Open external diff tool |
+| `/` | Filter branches by text |

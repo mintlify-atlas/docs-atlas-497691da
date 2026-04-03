@@ -1,80 +1,226 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Launch lazygit in a git repository and learn the core navigation concepts, key actions, and productivity shortcuts in minutes."
 ---
 
-## Get started in three steps
+## Prerequisites
 
-Get your documentation site running locally and make your first customization.
+- lazygit installed — see the [installation guide](/installation)
+- git 2.32.0 or later
+- An existing git repository (or any directory where you want to initialize one)
 
-### Step 1: Set up your local environment
+## Launch lazygit
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+<Steps>
+  <Step title="Open a terminal in your git repository">
+    Navigate to any git repository in your terminal:
 
-### Step 2: Deploy your changes
+    ```sh
+    cd /path/to/your/repo
+    ```
+  </Step>
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+  <Step title="Run lazygit">
+    ```sh
+    lazygit
+    ```
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+    lazygit opens a full-screen terminal UI. If you run it outside a git repository, it will prompt you to initialize one with `git init`.
+  </Step>
+</Steps>
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+## The interface layout
 
-### Step 3: Go live
+lazygit divides the screen into five panels on the left and a main diff/detail view on the right.
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+| Panel | Key | What it shows |
+|-------|-----|---------------|
+| **Status** | `1` | Current branch, upstream tracking info, and recent repos |
+| **Files** | `2` | Working tree — unstaged and staged changes |
+| **Branches** | `3` | Local branches, remotes, tags, and GitHub PRs (if `gh` is installed) |
+| **Commits** | `4` | Commit log for the current branch |
+| **Stash** | `5` | Stash entries |
+
+The **main panel** on the right shows a diff, file list, or detail view depending on what you have selected on the left.
+
+<Tip>
+  Press `+` and `_` to cycle through screen modes and give more space to the main panel. This also reveals the full commit graph.
+</Tip>
+
+## Navigate the interface
+
+<Steps>
+  <Step title="Switch between panels">
+    Press the number key for the panel you want (`1`–`5`), or use the left/right arrow keys to move between panels.
+  </Step>
+
+  <Step title="Move within a panel">
+    Use the up/down arrow keys (or `j`/`k` in vim-style) to select items within the active panel.
+  </Step>
+
+  <Step title="Dive into an item">
+    Press `enter` to expand the selected item. For example:
+
+    - In the **Files** panel — opens the file's diff line by line
+    - In the **Commits** panel — shows the files changed in that commit
+    - In the **Branches** panel — shows that branch's commit log
+  </Step>
+
+  <Step title="Go back">
+    Press `escape` to return to the previous view.
+  </Step>
+</Steps>
+
+## Your first actions
+
+### View a diff
+
+Select the **Files** panel (`2`). Highlight any changed file — the diff appears immediately in the main panel on the right. Press `enter` to focus the diff view and scroll through individual lines.
+
+### Stage a file
+
+With a file selected in the **Files** panel, press `space` to toggle it between staged and unstaged. The file moves between the unstaged and staged sections.
+
+To stage individual lines instead of the whole file:
+
+<Steps>
+  <Step title="Enter the diff view">
+    Press `enter` on a file in the Files panel to open the line-level diff.
+  </Step>
+  <Step title="Stage a line">
+    Move to a line and press `space` to stage it.
+  </Step>
+  <Step title="Stage a range">
+    Press `v` to start selecting a range of lines, then press `space` to stage the selection. Press `a` to select and stage the entire current hunk at once.
+  </Step>
+</Steps>
+
+### Make a commit
+
+<Steps>
+  <Step title="Stage your changes">
+    Stage the files or lines you want to include (see above).
+  </Step>
+  <Step title="Open the commit dialog">
+    Press `c` in the **Files** panel to open the commit message input.
+  </Step>
+  <Step title="Type your commit message and confirm">
+    Enter your message and press `enter` to commit.
+  </Step>
+</Steps>
+
+<Note>
+  Press `C` (uppercase C) to commit using your `$GIT_EDITOR` instead of the built-in input — useful for multi-line commit messages with a body.
+</Note>
+
+## Open the keybindings menu
+
+Press `?` at any time to open the keybindings reference for the currently active panel. Every available action, its key, and a brief description are listed there. This is the fastest way to discover what lazygit can do.
+
+## Set up the `lg` alias
+
+Typing `lazygit` every time gets old quickly. Add an alias to your shell config:
+
+```sh
+echo "alias lg='lazygit'" >> ~/.zshrc
+source ~/.zshrc
+```
+
+Replace `~/.zshrc` with `~/.bashrc` or your shell's equivalent. After that, `lg` launches lazygit.
+
+## Change directory on exit
+
+When you navigate between repos inside lazygit, your terminal's working directory does not change automatically. To fix that, add the following shell function to your `~/.zshrc` (or equivalent):
+
+```sh
+lg()
+{
+    export LAZYGIT_NEW_DIR_FILE=~/.lazygit/newdir
+
+    lazygit "$@"
+
+    if [ -f $LAZYGIT_NEW_DIR_FILE ]; then
+            cd "$(cat $LAZYGIT_NEW_DIR_FILE)"
+            rm -f $LAZYGIT_NEW_DIR_FILE > /dev/null
+    fi
+}
+```
+
+Then reload your shell config:
+
+```sh
+source ~/.zshrc
+```
+
+From now on, calling `lg` instead of `lazygit` will change your terminal directory to wherever you were when you exited lazygit. To exit without changing directory, press `shift+Q` instead of `q`.
+
+## CLI flags reference
+
+lazygit accepts the following flags and arguments:
+
+### Starting in a specific context
+
+```sh
+lazygit [status|branch|log|stash]
+```
+
+Pass a positional argument to open lazygit focused on a specific panel:
+
+| Argument | Panel opened |
+|----------|-------------|
+| `status` | Status panel |
+| `branch` | Branches panel |
+| `log` | Commits panel |
+| `stash` | Stash panel |
+
+### Flags
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--path <path>` | `-p` | Open lazygit in the given git repo path. Equivalent to `--work-tree=<path> --git-dir=<path>/.git/`. Incompatible with `--work-tree` and `--git-dir`. |
+| `--filter <path>` | `-f` | Filter commits, reflog, and stash to those touching `<path>`. Some operations are restricted in filter mode. |
+| `--work-tree <path>` | `-w` | Equivalent of git's `--work-tree` argument. Defaults to `$GIT_WORK_TREE`. |
+| `--git-dir <path>` | `-g` | Equivalent of git's `--git-dir` argument. Defaults to `$GIT_DIR`. |
+| `--use-config-file <paths>` | `--ucf` | Comma-separated list of config file paths to use instead of the default. Sets `$LG_CONFIG_FILE`. |
+| `--use-config-dir <path>` | `--ucd` | Override the default config directory. Sets `$CONFIG_DIR`. |
+| `--screen-mode <mode>` | `--sm` | Initial screen mode for the focused panel: `normal` (default), `half`, or `full`. |
+| `--version` | `-v` | Print version, build date, commit, OS, and arch information. |
+| `--config` | `-c` | Print the default config YAML to stdout. |
+| `--print-config-dir` | `--cd` | Print the config directory path. |
+| `--debug` | `-d` | Enable debug mode with logging. Use `LOG_LEVEL` env var (`debug`/`info`/`warn`/`error`) to control verbosity. |
+| `--logs` | `-l` | Tail the lazygit log file (use in a separate terminal alongside `--debug`). |
+
+### Debug workflow
+
+Run two terminal tabs side by side:
+
+```sh
+# Tab 1 — run lazygit with debug logging
+lazygit --debug
+
+# Tab 2 — stream the log output
+lazygit --logs
+```
+
+Set log verbosity with the `LOG_LEVEL` env var:
+
+```sh
+LOG_LEVEL=warn lazygit --debug
+```
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Staging" icon="list-check" href="/features/staging">
+    Stage individual lines, hunks, and ranges across multiple files.
+  </Card>
+  <Card title="Commits" icon="circle-dot" href="/features/commits">
+    Amend, reword, drop, and cherry-pick commits with simple keypresses.
+  </Card>
+  <Card title="Rebasing" icon="code-branch" href="/features/rebasing">
+    Squash, fixup, reorder, and edit commits without touching a TODO file.
+  </Card>
+  <Card title="Configuration" icon="gear" href="/configuration/overview">
+    Set up custom keybindings, pagers, and commands to fit your workflow.
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

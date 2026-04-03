@@ -1,0 +1,260 @@
+---
+title: "Installation"
+description: "Install lazygit on macOS, Linux, or Windows using your preferred package manager, binary release, or from source."
+---
+
+lazygit requires **git 2.32.0 or later**. Confirm your git version before installing:
+
+```sh
+git --version
+```
+
+<Tabs>
+  <Tab title="macOS">
+    <CodeGroup>
+
+```sh Homebrew
+brew install lazygit
+```
+
+```sh MacPorts
+sudo port install lazygit
+```
+
+```sh Conda
+conda install -c conda-forge lazygit
+```
+
+    </CodeGroup>
+
+    <Note>
+      Homebrew works on Linux too — see the Linux tab for the full list of Linux package managers.
+    </Note>
+  </Tab>
+
+  <Tab title="Linux">
+    <CodeGroup>
+
+```sh Homebrew
+brew install lazygit
+```
+
+```sh Void Linux
+sudo xbps-install -S lazygit
+```
+
+```sh Arch Linux (pacman)
+sudo pacman -S lazygit
+```
+
+```sh Fedora / CentOS / Amazon Linux 2023
+sudo dnf copr enable dejan/lazygit
+sudo dnf install lazygit
+```
+
+```sh Debian 13+ / Ubuntu 25.10+
+sudo apt install lazygit
+```
+
+```sh NixOS (nixpkgs)
+nix-shell -p lazygit
+```
+
+```sh FreeBSD
+pkg install lazygit
+```
+
+```sh Termux
+apt install lazygit
+```
+
+```sh Conda
+conda install -c conda-forge lazygit
+```
+
+```sh Flox
+flox install lazygit
+```
+
+    </CodeGroup>
+
+    ### Debian 12 / Ubuntu 25.04 and earlier
+
+    For older Debian and Ubuntu releases, install from the GitHub releases directly:
+
+    ```sh
+    LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | \grep -Po '"tag_name": *"v\K[^"]*')
+    LAZYGIT_ARCH=$(uname -m | sed -e 's/aarch64/arm64/')
+    curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_${LAZYGIT_ARCH}.tar.gz"
+    tar xf lazygit.tar.gz lazygit
+    sudo install lazygit -D -t /usr/local/bin/
+    ```
+
+    Verify the installation:
+
+    ```sh
+    lazygit --version
+    ```
+
+    ### Fedora / RHEL derivatives (Terra)
+
+    An alternative to the Copr repo is the [Terra repository](https://terra.fyralabs.com/):
+
+    ```sh
+    sudo dnf install --nogpgcheck --repofrompath 'terra,https://repos.fyralabs.com/terra$releasever' terra-release
+    sudo dnf install lazygit
+    ```
+
+    Terra also provides `lazygit-doc`, which contains the full lazygit docs folder.
+
+    ### Arch Linux (AUR — development build)
+
+    The AUR package tracks the latest commit rather than the latest release:
+
+    ```sh
+    # Install using your preferred AUR helper, e.g. yay
+    yay -S lazygit-git
+    ```
+
+    See the [Arch User Repository wiki](https://wiki.archlinux.org/index.php/Arch_User_Repository) for setup instructions.
+
+    ### NixOS — official flake
+
+    Run the latest development version directly from the repository without installing:
+
+    ```sh
+    nix run github:jesseduffield/lazygit
+    ```
+
+    Build from source using the flake:
+
+    ```sh
+    nix build github:jesseduffield/lazygit
+    ```
+
+    To integrate lazygit into another flake-based project, use the provided overlay:
+
+    ```nix
+    {
+      inputs.lazygit.url = "github:jesseduffield/lazygit";
+
+      outputs = { self, nixpkgs, lazygit }: {
+        nixpkgs.overlays = [ lazygit.overlays.default ];
+      };
+    }
+    ```
+
+    ### openSUSE
+
+    <CodeGroup>
+
+```sh Tumbleweed
+sudo zypper ar https://download.opensuse.org/repositories/devel:/languages:/go/openSUSE_Factory/devel:languages:go.repo
+sudo zypper ref && sudo zypper in lazygit
+```
+
+```sh Leap
+source /etc/os-release
+sudo zypper ar https://download.opensuse.org/repositories/devel:/languages:/go/$VERSION_ID/devel:languages:go.repo
+sudo zypper ref && sudo zypper in lazygit
+```
+
+    </CodeGroup>
+
+    ### Other Linux distributions
+
+    <CodeGroup>
+
+```sh Solus
+sudo eopkg install lazygit
+```
+
+```sh Funtoo
+sudo emerge dev-vcs/lazygit
+```
+
+```sh Gentoo (GURU overlay)
+sudo eselect repository enable guru
+sudo emaint sync -r guru
+sudo emerge dev-vcs/lazygit
+```
+
+    </CodeGroup>
+
+    ### gah
+
+    ```sh
+    gah install lazygit
+    ```
+
+  </Tab>
+
+  <Tab title="Windows">
+    <CodeGroup>
+
+```powershell Winget
+winget install -e --id=JesseDuffield.lazygit
+```
+
+```sh Scoop
+scoop bucket add extras
+scoop install lazygit
+```
+
+```sh Chocolatey
+choco install lazygit
+```
+
+    </CodeGroup>
+
+    <Note>
+      Winget requires Windows 10 version 1709 or later.
+    </Note>
+  </Tab>
+</Tabs>
+
+## Binary releases
+
+Pre-built binaries for Windows, macOS (10.12+), and Linux are available on the [GitHub Releases page](https://github.com/jesseduffield/lazygit/releases). Download the archive for your OS and architecture, extract it, and move the `lazygit` binary to a directory on your `$PATH`.
+
+## Go install
+
+If you have Go installed, you can install lazygit directly with:
+
+```sh
+go install github.com/jesseduffield/lazygit@latest
+```
+
+<Warning>
+  If the `lazygit` command is not found after installation, make sure `~/go/bin` is on your `$PATH` (macOS/Linux) or `%HOME%\go\bin` (Windows). This is different from `C:\Go\bin`, which is Go's own binary directory.
+</Warning>
+
+## Build from source
+
+You'll need [Go installed](https://golang.org/doc/install) to build from source.
+
+```sh
+git clone https://github.com/jesseduffield/lazygit.git
+cd lazygit
+go install
+```
+
+To compile and run without installing:
+
+```sh
+go run main.go
+```
+
+## Dev container feature
+
+If you use GitHub Codespaces or a Dev Container, you can add lazygit via the third-party [dev container feature](https://github.com/GeorgOfenbeck/features/tree/main/src/lazygit-linuxbinary) based on the binary releases.
+
+## Verify your installation
+
+After installing, confirm lazygit is available in your `$PATH`:
+
+```sh
+lazygit --version
+```
+
+You're ready to go. See the [quickstart guide](/quickstart) to launch lazygit and take your first steps.

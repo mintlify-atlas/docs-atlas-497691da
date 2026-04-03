@@ -1,0 +1,96 @@
+---
+title: "Worktrees"
+description: "Work on multiple branches simultaneously without stashing or WIP commits — using git worktrees managed directly from lazygit."
+---
+
+A **git worktree** is a separate working directory linked to the same repository. Each worktree can have a different branch checked out at the same time. This means you can switch contexts — say, jump to a hotfix branch — without stashing your current work or making a WIP commit.
+
+## Why use worktrees?
+
+Without worktrees, switching branches when you have uncommitted changes requires either:
+- Stashing your changes, switching, doing your work, switching back, and popping the stash
+- Making a WIP commit just to switch branches
+
+With worktrees, each branch lives in its own directory. You switch between them by switching worktrees — not by changing which branch is checked out.
+
+<CardGroup cols={2}>
+  <Card title="No stashing required" icon="layer-group">
+    Each worktree is a separate directory. Your in-progress changes stay exactly where they are.
+  </Card>
+  <Card title="True parallel work" icon="code-branch">
+    Run a dev server in one worktree while working on a feature in another — each in its own directory.
+  </Card>
+</CardGroup>
+
+## Creating a worktree
+
+<Steps>
+  <Step title="Go to the Branches panel">
+    Navigate to the **Branches** panel and select the branch you want to check out in a new worktree.
+  </Step>
+  <Step title="Open worktree options">
+    Press `w` on the branch to open the worktree options menu.
+  </Step>
+  <Step title="Create the worktree">
+    Select **Create worktree** and enter a path for the new worktree directory. lazygit creates the worktree and switches to it automatically.
+  </Step>
+</Steps>
+
+You can also create a worktree from the **Commits**, **Reflog**, **Stash**, **Tags**, and **Remote branches** panels by pressing `w` on any item.
+
+<Tip>
+You can create a worktree for a branch that doesn't exist yet — lazygit will create the branch and the worktree at the same time.
+</Tip>
+
+## Switching between worktrees
+
+Open the **Worktrees** panel by navigating to it with `[` / `]` (tab cycling) or pressing `w` from the Commits panel. The Worktrees panel lists all active worktrees for the current repository.
+
+Press `space` on a worktree to switch to it. lazygit will change its working context to that worktree's directory.
+
+## Managing worktrees
+
+All worktree management is done from the **Worktrees** panel.
+
+| Key | Action |
+|-----|--------|
+| `n` | Create a new worktree |
+| `space` | Switch to the selected worktree |
+| `o` | Open the worktree directory in your editor |
+| `d` | Remove the selected worktree |
+| `/` | Filter worktrees by text |
+
+### Removing a worktree
+
+Press `d` on a worktree in the **Worktrees** panel to remove it. This deletes both the worktree's directory and the metadata git tracks in the `.git` directory.
+
+<Warning>
+Removing a worktree deletes its directory and any uncommitted changes in it. Make sure you've committed or otherwise saved any work before removing a worktree.
+</Warning>
+
+## Worktrees and branch switching
+
+One of the main benefits of worktrees is that they eliminate the need to stash when switching branches. Consider this common scenario:
+
+- You are working on a feature in your main working directory
+- A critical bug needs fixing on the `main` branch
+- Without worktrees: `git stash`, checkout `main`, fix bug, push, checkout feature branch, `git stash pop`
+- With worktrees: switch to the `main` worktree, fix bug, push, switch back — your feature directory is unchanged
+
+The feature branch worktree's files, staged changes, and editor state are all preserved while you work in the other worktree.
+
+## How worktrees relate to the repository
+
+All worktrees share the same:
+- `.git` directory (metadata, refs, stash, config)
+- Object store (commits, trees, blobs)
+- Remote configuration
+
+Each worktree has its own:
+- Working directory (files on disk)
+- Currently checked-out branch
+- Index (staged changes)
+
+<Note>
+You cannot check out the same branch in two worktrees at the same time. If a branch is checked out in one worktree, it will appear locked in the Branches panel from other worktrees.
+</Note>

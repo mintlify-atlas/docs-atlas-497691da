@@ -1,0 +1,106 @@
+---
+title: "Stacked branches"
+description: "Break large changes into a reviewable chain of branches and let lazygit keep the whole stack in sync when you rebase."
+---
+
+A stacked branch workflow lets you split a large body of work into a series of smaller, independently reviewable branches layered on top of each other. For example, you might have:
+
+1. A branch for preparatory refactorings
+2. A branch for backend changes (stacked on top of the first)
+3. A branch for frontend changes (stacked on top of the second)
+
+Each branch in the stack depends on the one below it. When any branch lower in the stack is rebased or amended, everything above it needs to follow. Git can handle this automatically — and lazygit surfaces it clearly in the UI.
+
+## Enabling stacked branches
+
+Git's `rebase.updateRefs` option tells git to automatically update all intermediate branch refs when you rebase the topmost branch. Set it globally with:
+
+```bash
+git config --global rebase.updateRefs true
+```
+
+Or set it per-repository:
+
+```bash
+git config rebase.updateRefs true
+```
+
+<Note>
+`rebase.updateRefs` requires Git 2.38 or later.
+</Note>
+
+## How lazygit visualizes the stack
+
+With `rebase.updateRefs` enabled, lazygit marks each branch head in the stack in the commit log:
+
+- A **cyan asterisk** (`*`) appears next to commits that are the tip of a branch in the stack.
+- If you have [nerd fonts](https://www.nerdfonts.com/) configured, the asterisk is replaced with a cyan branch symbol.
+
+This makes it easy to see at a glance exactly where each branch in the stack begins and ends as you scroll through the commit log.
+
+## How rebasing updates the whole stack
+
+When you rebase the topmost branch of a stack, git (via `rebase.updateRefs`) automatically moves the intermediate branch refs so that each branch remains stacked on the one below it. This works for:
+
+- Standard rebases onto a new base
+- Interactive rebases (squash, fixup, reword, drop)
+- Amending any commit in the stack
+
+lazygit's interactive rebase actions all trigger this behavior automatically. You do not need to manually rebase each branch in the stack.
+
+## Workflow example
+
+The following example creates a three-branch stack and demonstrates how rebasing the top branch keeps everything aligned.
+
+<Steps>
+  <Step title="Enable updateRefs">
+    Set `rebase.updateRefs = true` in your git config if you have not already done so.
+
+    ```bash
+    git config --global rebase.updateRefs true
+    ```
+  </Step>
+  <Step title="Create the base feature branch">
+    Check out `main` and create the first branch in your stack.
+
+    ```bash
+    git checkout main
+    git checkout -b refactor/extract-helpers
+    ```
+
+    Make your changes and commit them. In lazygit, stage files with `space` and commit with `c`.
+  </Step>
+  <Step title="Stack a second branch on top">
+    Create a new branch from the tip of the first one.
+
+    ```bash
+    git checkout -b feat/backend-changes
+    ```
+
+    Commit your backend work. lazygit will show a cyan asterisk next to the `refactor/extract-helpers` tip in the commit log, indicating where that branch ends.
+  </Step>
+  <Step title="Stack a third branch">
+    Create a third branch stacked on the second.
+
+    ```bash
+    git checkout -b feat/frontend-changes
+    ```
+
+    Commit the frontend work. You now have a three-branch stack visible in lazygit's commit log.
+  </Step>
+  <Step title="Rebase the top branch">
+    If the base of your stack (e.g., `main`) has moved forward, check out `feat/frontend-changes` and rebase onto the new `main`. With `rebase.updateRefs` enabled, git will automatically advance all intermediate branch tips so the stack stays intact.
+
+    In lazygit, press `r` on `main` in the branches panel while `feat/frontend-changes` is checked out, or use `i` in the commits panel to start an interactive rebase.
+  </Step>
+</Steps>
+
+## Tips
+
+<Tip>
+Use lazygit's interactive rebase (`i` in the commits panel) to amend, squash, or reorder commits within a branch in the stack. The other branches in the stack update automatically.
+</Tip>
+
+<Tip>
+Press `shift+b` on a commit to mark it as a rebase base, then press `r` on a target branch to rebase only the commits above that marker. This is useful for moving the top branches of a stack onto a different upstream without touching the lower branches.
+</Tip>

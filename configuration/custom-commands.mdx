@@ -1,0 +1,449 @@
+---
+title: "Custom commands"
+description: "Extend lazygit with your own keybindings that run arbitrary shell commands, display prompts, and interact with the selected git context."
+---
+
+Custom commands let you bind arbitrary shell commands to keys within any lazygit context. They support interactive prompts, Go template syntax for accessing selected items, and multiple output modes.
+
+## Basic setup
+
+Add a `customCommands:` array to your `config.yml`. Each entry is a command definition:
+
+```yaml
+customCommands:
+  - key: '<c-r>'
+    context: 'commits'
+    command: 'hub browse -- "commit/{{.SelectedLocalCommit.Hash}}"'
+    description: 'Open commit on GitHub'
+```
+
+<Tip>
+  Open your config file from within lazygit by pressing `e` in the **Status** panel.
+</Tip>
+
+Custom commands appear in the `?` keybindings menu alongside built-in bindings.
+
+## Command fields
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `key` | no | The key to trigger the command. Omit to make the command only accessible from the `?` menu. |
+| `command` | yes | The shell command to run. Supports Go template syntax. |
+| `context` | yes | Which panel context activates the command. |
+| `description` | no | Label shown in the `?` keybindings menu. |
+| `prompts` | no | List of prompts to show before running the command. |
+| `loadingText` | no | Text displayed while the command runs. |
+| `output` | no | Where command output goes: `none`, `terminal`, `log`, `logWithPty`, or `popup`. |
+| `outputTitle` | no | Title for the popup panel when `output: popup`. Defaults to the command string. |
+| `after` | no | Actions to take after the command completes (e.g. `checkForConflicts: true`). |
+
+The `key` field accepts a single letter or any value from the [special keys reference](/configuration/keybindings#key-format-reference).
+
+## Contexts
+
+The `context` field determines which panel must be active for the keybinding to work:
+
+| Context | Panel |
+|---------|-------|
+| `global` | Active everywhere in lazygit |
+| `status` | The Status tab |
+| `files` | The Files tab |
+| `worktrees` | The Worktrees tab |
+| `submodules` | The Submodules tab |
+| `localBranches` | The Local Branches tab |
+| `remotes` | The Remotes tab |
+| `remoteBranches` | Remote branch list (press Enter on a remote) |
+| `tags` | The Tags tab |
+| `commits` | The Commits tab |
+| `reflogCommits` | The Reflog tab |
+| `subCommits` | Branch commit list (press Enter on a branch) |
+| `commitFiles` | Commit file list (press Enter on a commit or stash entry) |
+| `stash` | The Stash tab |
+
+You can target multiple contexts using a comma-separated string:
+
+```yaml
+customCommands:
+  - key: 'P'
+    context: 'commits, subCommits'
+    command: 'git format-patch {{.SelectedCommitRange.From}}^..{{.SelectedCommitRange.To}}'
+    description: 'Create patch files for selected commits'
+    output: log
+```
+
+## Template variables
+
+Commands use [Go template syntax](https://pkg.go.dev/text/template). The following objects are available:
+
+| Variable | Available in context |
+|----------|---------------------|
+| `{{.SelectedCommit}}` | `commits`, `reflogCommits`, `subCommits` |
+| `{{.SelectedCommitRange}}` | `commits`, `subCommits` — range selection |
+| `{{.SelectedFile}}` | `files` |
+| `{{.SelectedPath}}` | `files` |
+| `{{.SelectedLocalBranch}}` | `localBranches` |
+| `{{.SelectedRemoteBranch}}` | `remoteBranches` |
+| `{{.SelectedRemote}}` | `remotes` |
+| `{{.SelectedTag}}` | `tags` |
+| `{{.SelectedStashEntry}}` | `stash` |
+| `{{.SelectedCommitFile}}` | `commitFiles` |
+| `{{.SelectedSubmodule}}` | `submodules` |
+| `{{.SelectedWorktree}}` | `worktrees` |
+| `{{.CheckedOutBranch}}` | all contexts |
+| `{{.Form.KeyName}}` | all contexts (prompt values) |
+
+<Note>
+  `SelectedLocalCommit`, `SelectedReflogCommit`, and `SelectedSubCommit` still work but are deprecated — use `SelectedCommit` instead.
+</Note>
+
+### Commit range selection
+
+When a range of commits is selected, `SelectedCommitRange` provides `.From` and `.To` (the hashes of the bottom and top selected commits):
+
+```yaml
+customCommands:
+  - key: 'p'
+    context: 'commits'
+    command: 'git format-patch {{.SelectedCommitRange.From}}^..{{.SelectedCommitRange.To}}'
+    description: 'Export selected commits as patches'
+    output: log
+```
+
+### Template functions
+
+**`quote`** — wraps a value in quotes with platform-appropriate escaping:
+
+```yaml
+command: "git add {{.SelectedFile.Name | quote}}"
+```
+
+**`runCommand`** — runs a shell command and returns its output (must be a single line):
+
+```yaml
+- type: 'input'
+  title: 'Branch name:'
+  key: 'Branch'
+  initialValue: "feature/{{ runCommand \"date +\\\"%Y/%-m\\\"\" }}/"
+```
+
+**Conditionals** — Go templates support `if/else`:
+
+```yaml
+command: "git {{if .SelectedFile.HasUnstagedChanges}}add{{else}}reset{{end}} {{.SelectedFile.Name | quote}}"
+```
+
+## Output modes
+
+| Mode | Behavior |
+|------|----------|
+| `none` | Output is discarded (default) |
+| `terminal` | Suspends lazygit and runs the command in the terminal — use for interactive commands |
+| `log` | Streams output to the lazygit command log |
+| `logWithPty` | Like `log` but runs in a pseudo-terminal — use for commands that produce colored output |
+| `popup` | Displays output in a popup panel |
+
+```yaml
+customCommands:
+  - key: 'C'
+    context: 'global'
+    command: 'git commit'
+    output: terminal
+    description: 'Open interactive git commit'
+```
+
+## Prompts
+
+Prompts collect user input before the command runs. The entered values are accessible in the command as `{{.Form.KeyName}}`.
+
+### Common prompt fields
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `type` | yes | One of `input`, `confirm`, `menu`, `menuFromCommand` |
+| `title` | no | Label shown at the top of the prompt popup |
+| `key` | yes | Name used to reference the value in the command template |
+
+### input
+
+Displays a text input box.
+
+| Field | Description |
+|-------|-------------|
+| `initialValue` | Pre-filled text (supports template syntax) |
+| `suggestions.preset` | Built-in suggestion source: `authors`, `branches`, `files`, `refs`, `remotes`, `remoteBranches`, `tags` |
+| `suggestions.command` | Shell command — each output line becomes a suggestion |
+
+```yaml
+customCommands:
+  - key: 'f'
+    context: 'localBranches'
+    prompts:
+      - type: 'input'
+        title: 'Branch to fetch:'
+        key: 'Branch'
+        suggestions:
+          preset: 'branches'
+    command: 'git fetch origin {{.Form.Branch | quote}}'
+    description: 'Fetch a specific branch'
+    output: log
+```
+
+With a command-driven suggestion list:
+
+```yaml
+customCommands:
+  - key: 'a'
+    context: 'commits'
+    prompts:
+      - type: 'input'
+        title: 'Which branch?'
+        key: 'Branch'
+        suggestions:
+          command: "git branch --format='%(refname:short)'"
+    command: 'echo {{.Form.Branch | quote}}'
+    output: popup
+```
+
+With a pre-filled initial value from the current context:
+
+```yaml
+customCommands:
+  - key: 'r'
+    context: 'remotes'
+    prompts:
+      - type: 'input'
+        title: 'Remote name:'
+        key: 'Remote'
+        initialValue: "{{.SelectedRemote.Name}}"
+    command: 'git remote rename {{.SelectedRemote.Name | quote}} {{.Form.Remote | quote}}'
+    description: 'Rename remote'
+    output: log
+```
+
+### confirm
+
+Displays a yes/no confirmation dialog.
+
+| Field | Description |
+|-------|-------------|
+| `body` | Static body text shown in the dialog |
+
+```yaml
+customCommands:
+  - key: 'D'
+    context: 'localBranches'
+    prompts:
+      - type: 'confirm'
+        title: 'Delete remote branch'
+        body: 'Are you sure you want to delete this branch from the remote?'
+    command: 'git push origin --delete {{.SelectedLocalBranch.Name | quote}}'
+    description: 'Delete remote branch'
+    output: log
+```
+
+### menu
+
+Displays a list of options for the user to choose from.
+
+| Field | Description |
+|-------|-------------|
+| `options` | Array of option objects |
+
+Each option has:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `value` | yes | The value used in the command template |
+| `name` | no | Display name (falls back to `value` if omitted) |
+| `description` | no | Secondary label shown alongside the name |
+| `key` | no | Keyboard shortcut to select this option directly |
+
+```yaml
+customCommands:
+  - key: 'n'
+    context: 'localBranches'
+    prompts:
+      - type: 'menu'
+        title: 'What kind of branch is it?'
+        key: 'BranchType'
+        options:
+          - value: 'feature'
+            name: 'feature branch'
+            description: 'branch based off develop'
+            key: 'f'
+          - value: 'hotfix'
+            name: 'hotfix branch'
+            description: 'branch based off main for fast bug fixes'
+            key: 'h'
+          - value: 'release'
+            name: 'release branch'
+            description: 'branch for a release'
+            key: 'r'
+      - type: 'input'
+        title: 'What is the new branch name?'
+        key: 'BranchName'
+        initialValue: ''
+    command: 'git flow {{.Form.BranchType}} start {{.Form.BranchName | quote}}'
+    loadingText: 'Creating branch'
+    description: 'Start a git-flow branch'
+```
+
+### menuFromCommand
+
+Generates menu options dynamically by running a shell command.
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `command` | yes | Shell command whose output becomes the menu items |
+| `filter` | no | Regex with named or unnamed capture groups to extract parts of each line |
+| `valueFormat` | no | Template for the option value using captured groups |
+| `labelFormat` | no | Template for the display label (defaults to `valueFormat`) |
+
+With named capture groups:
+
+```yaml
+customCommands:
+  - key: 'a'
+    context: 'remotes'
+    description: 'Checkout a remote branch as FETCH_HEAD'
+    command: "git fetch {{.Form.Remote}} {{.Form.Branch}} && git checkout FETCH_HEAD"
+    prompts:
+      - type: 'menuFromCommand'
+        title: 'Remote branch:'
+        key: 'Branch'
+        command: 'git branch -r --list {{.SelectedRemote.Name}}/*'
+        filter: '.*{{.SelectedRemote.Name}}/(?P<branch>.*)'
+        valueFormat: '{{ .branch }}'
+        labelFormat: '{{ .branch | green }}'
+```
+
+With unnamed capture groups (referenced as `.group_1`, `.group_2`, etc.):
+
+```yaml
+prompts:
+  - type: 'menuFromCommand'
+    title: 'Remote branch:'
+    key: 'Branch'
+    command: 'git branch -r --list origin/*'
+    filter: '.*/([^/]+)'
+    valueFormat: '{{ .group_1 }}'
+    labelFormat: '{{ .group_1 | green }}'
+```
+
+Without a filter — each output line becomes a menu item directly:
+
+```yaml
+prompts:
+  - type: 'menuFromCommand'
+    title: 'File to open:'
+    key: 'File'
+    command: 'ls'
+```
+
+## Full examples
+
+### Open commit on GitHub
+
+```yaml
+customCommands:
+  - key: '<c-r>'
+    context: 'commits'
+    command: 'hub browse -- "commit/{{.SelectedLocalCommit.Hash}}"'
+    description: 'Open commit on GitHub'
+```
+
+### Toggle file staged/unstaged
+
+```yaml
+customCommands:
+  - key: 'a'
+    context: 'files'
+    command: "git {{if .SelectedFile.HasUnstagedChanges}}add{{else}}reset{{end}} {{.SelectedFile.Name | quote}}"
+    description: 'Toggle file staged'
+```
+
+### Interactive git commit in terminal
+
+```yaml
+customCommands:
+  - key: 'C'
+    context: 'global'
+    command: 'git commit'
+    output: terminal
+    description: 'Open git commit in terminal'
+```
+
+### git-flow branch workflow
+
+```yaml
+customCommands:
+  - key: 'n'
+    context: 'localBranches'
+    prompts:
+      - type: 'menu'
+        title: 'What kind of branch is it?'
+        key: 'BranchType'
+        options:
+          - name: 'feature'
+            description: 'a feature branch'
+            value: 'feature'
+          - name: 'hotfix'
+            description: 'a hotfix branch'
+            value: 'hotfix'
+          - name: 'release'
+            description: 'a release branch'
+            value: 'release'
+      - type: 'input'
+        title: 'What is the new branch name?'
+        key: 'BranchName'
+        initialValue: ''
+    command: 'git flow {{.Form.BranchType}} start {{.Form.BranchName}}'
+    loadingText: 'Creating branch'
+    description: 'Start a git-flow branch'
+```
+
+## Command menus
+
+For commands you use infrequently, you can nest them inside a menu so you don't need unique top-level keybindings for each one. Use the `commandMenu` property instead of `command`:
+
+```yaml
+customCommands:
+  - key: X
+    description: "Copy/paste commits across repos"
+    commandMenu:
+      - key: c
+        command: 'git format-patch --stdout {{.SelectedCommitRange.From}}^..{{.SelectedCommitRange.To}} | pbcopy'
+        context: 'commits, subCommits'
+        description: "Copy selected commits to clipboard"
+      - key: v
+        command: 'pbpaste | git am'
+        context: 'commits'
+        description: "Paste commits from clipboard"
+```
+
+<Note>
+  When using `commandMenu`, only `key` and `description` can be set on the parent entry. All other fields (`command`, `context`, `prompts`, etc.) are set on each child command.
+</Note>
+
+## Keybinding collisions
+
+If a custom command's key collides with a built-in binding in the same context, the custom command takes precedence. However, if a custom command is in the `global` context and collides with a built-in binding in a specific context (e.g. `files`), the built-in binding wins.
+
+To resolve conflicts, either change your custom command's key or [disable the built-in binding](/configuration/keybindings#disabling-a-keybinding).
+
+## Debugging
+
+Wrap your command in `echo` and set `output: popup` to preview how template placeholders resolve without actually running the command:
+
+```yaml
+customCommands:
+  - key: 'd'
+    context: 'commits'
+    command: 'echo "Hash: {{.SelectedLocalCommit.Hash}}"'
+    output: popup
+    description: 'Debug: show commit hash'
+```
+
+## More examples
+
+The [lazygit Custom Commands Compendium](https://github.com/jesseduffield/lazygit/wiki/Custom-Commands-Compendium) on the wiki contains a large collection of community-contributed commands.

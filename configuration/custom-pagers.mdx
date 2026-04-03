@@ -1,0 +1,185 @@
+---
+title: "Custom pagers"
+description: "Replace lazygit's built-in diff viewer with delta, diff-so-fancy, ydiff, difftastic, or any other diff tool."
+---
+
+lazygit supports custom pagers that replace the built-in diff display. You can configure multiple pagers and cycle through them with the `|` key — useful when you want a rich pager for most diffs but need to switch to a simpler one occasionally.
+
+<Warning>
+  Custom pagers using the `pager` field are not supported on Windows. See the [Windows workaround](#windows-workaround) section below for an alternative using `externalDiffCommand`.
+</Warning>
+
+## Configuration
+
+Pagers are configured in the `pagers` array inside the `git:` section of `config.yml`:
+
+```yaml
+git:
+  pagers:
+    - pager: delta --dark --paging=never
+```
+
+Each pager entry supports these fields:
+
+| Field | Description |
+|-------|-------------|
+| `pager` | The pager command to run. Receives the diff output on stdin. |
+| `colorArg` | Value for `--color` in the `git diff` command. Default is `always`. Set to `never` for pagers that do their own coloring. |
+| `externalDiffCommand` | For diff tools that need to process the whole diff (not just stdin). Mutually exclusive with `pager`. |
+| `useExternalDiffGitConfig` | If `true`, uses the `diff.external` command from git config. Allows per-file-type configuration via `.gitattributes`. |
+
+### Multi-pager setup
+
+Configure multiple pagers and cycle through them with `|`:
+
+```yaml
+git:
+  pagers:
+    - pager: delta --dark --paging=never
+    - pager: ydiff -p cat -s --wrap --width={{columnWidth}}
+      colorArg: never
+    - externalDiffCommand: difft --color=always
+```
+
+### The `{{columnWidth}}` variable
+
+Some pagers need to know the terminal width. Use `{{columnWidth}}` as a placeholder in your pager command and lazygit will replace it with the current column width of the diff panel:
+
+```yaml
+git:
+  pagers:
+    - colorArg: never
+      pager: ydiff -p cat -s --wrap --width={{columnWidth}}
+```
+
+## Delta
+
+[delta](https://github.com/dandavison/delta) is a popular diff pager with syntax highlighting, line numbers, and side-by-side view.
+
+```yaml
+git:
+  pagers:
+    - pager: delta --dark --paging=never
+```
+
+### Clickable line numbers
+
+delta's `--hyperlinks` option renders clickable line number links. lazygit supports these — clicking a line number jumps to that line in your editor:
+
+```yaml
+git:
+  pagers:
+    - pager: >-
+        delta
+        --dark
+        --paging=never
+        --line-numbers
+        --hyperlinks
+        --hyperlinks-file-link-format="lazygit-edit://{path}:{line}"
+```
+
+<Note>
+  delta's `--navigate` option does not work in lazygit for technical reasons.
+</Note>
+
+## diff-so-fancy
+
+[diff-so-fancy](https://github.com/so-fancy/diff-so-fancy) provides a cleaner, more human-readable diff format.
+
+```yaml
+git:
+  pagers:
+    - pager: diff-so-fancy
+```
+
+## ydiff
+
+[ydiff](https://github.com/ymattw/ydiff) displays diffs side by side in the terminal. It works best with a wider diff panel.
+
+```yaml
+gui:
+  sidePanelWidth: 0.2  # gives more space for side-by-side display
+git:
+  pagers:
+    - colorArg: never
+      pager: ydiff -p cat -s --wrap --width={{columnWidth}}
+```
+
+<Note>
+  The Homebrew and pip versions of ydiff may be behind the master branch. If the no-pager functionality doesn't work, download the ydiff script directly from the repository.
+</Note>
+
+## Difftastic
+
+[difftastic](https://difftastic.wilfred.me.uk) is a structural diff tool that understands syntax. Because it needs access to the full diff rather than just post-processing git's output, it uses the `externalDiffCommand` field instead of `pager`:
+
+```yaml
+git:
+  pagers:
+    - externalDiffCommand: difft --color=always
+```
+
+With additional arguments:
+
+```yaml
+git:
+  pagers:
+    - externalDiffCommand: difft --color=always --display=inline --syntax-highlight=off
+```
+
+## Using git's diff.external config
+
+Instead of setting `externalDiffCommand` in lazygit's config, you can tell lazygit to use the diff command configured in git itself:
+
+```yaml
+git:
+  pagers:
+    - useExternalDiffGitConfig: true
+```
+
+This approach has two advantages:
+
+- The same diff tool is used for `git diff` on the command line and inside lazygit.
+- You can configure different diff tools per file type in `.gitattributes` — see the [git documentation on external diff drivers](https://git-scm.com/docs/gitattributes#_defining_an_external_diff_driver).
+
+## Windows workaround
+
+The `pager` field does not work on Windows due to a missing dependency. You can emulate a custom pager using `externalDiffCommand` with a PowerShell script.
+
+Save the following as `lazygit-pager.ps1` somewhere on your system:
+
+```pwsh
+#!/usr/bin/env pwsh
+
+$old = $args[1].Replace('\', '/')
+$new = $args[4].Replace('\', '/')
+$path = $args[0]
+git diff --no-index --no-ext-diff $old $new
+  | %{ $_.Replace($old, $path).Replace($new, $path) }
+  | delta --width=$env:LAZYGIT_COLUMNS
+```
+
+Replace `delta` in the last line with whichever pager you prefer, along with any arguments. Then configure lazygit to use the script:
+
+```yaml
+git:
+  pagers:
+    - externalDiffCommand: "C:/wherever/lazygit-pager.ps1"
+```
+
+<Note>
+  This workaround has a limitation: renames are shown as modifications to the old file rather than as renames. The diff content is always correct; only hunk headers are affected.
+</Note>
+
+## Cycling pagers
+
+When you have multiple pagers configured, press `|` to cycle through them in the order they appear in the array. This lets you keep a high-fidelity pager as the default and switch to a plainer view when needed.
+
+```yaml
+git:
+  pagers:
+    - pager: delta --dark --paging=never        # default: rich syntax-highlighted diff
+    - externalDiffCommand: difft --color=always  # cycle to: structural diff
+    - pager: cat                                 # cycle to: plain git output
+      colorArg: always
+```

@@ -1,0 +1,70 @@
+---
+title: "Introduction"
+description: "A simple terminal UI for git commands — making complex git operations accessible through an intuitive keyboard-driven interface."
+---
+
+lazygit is an open-source terminal UI for git that lets you stage files, manage branches, rebase interactively, cherry-pick commits, and much more — all without memorizing dozens of git commands. With 75,000+ GitHub stars, it has become the go-to tool for developers who want the power of git without the friction.
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install lazygit on macOS, Linux, or Windows using your preferred package manager.
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get up and running in minutes. Launch lazygit and navigate your first repo.
+  </Card>
+  <Card title="Core Features" icon="star" href="/features/staging">
+    Explore interactive staging, rebasing, cherry-picking, worktrees, and more.
+  </Card>
+  <Card title="Configuration" icon="gear" href="/configuration/overview">
+    Customize keybindings, themes, custom commands, and pager integrations.
+  </Card>
+</CardGroup>
+
+## Why lazygit?
+
+Git is powerful — but the command-line interface can be painful. Interactive rebasing forces you to edit a TODO file in your editor. Staging part of a file means stepping through hunks with a command-line prompt or hand-editing patch files. lazygit eliminates all of that friction.
+
+<CardGroup cols={2}>
+  <Card title="Stage individual lines" icon="list-check" href="/features/staging">
+    Press `space` to stage a line, `v` to select a range, or `a` for the whole hunk.
+  </Card>
+  <Card title="Interactive rebase" icon="code-branch" href="/features/rebasing">
+    Squash, fixup, drop, edit, or reorder commits with simple keypresses — no TODO file editing.
+  </Card>
+  <Card title="Undo anything" icon="rotate-left" href="/guides/undoing">
+    Press `z` to undo any git operation using the reflog — even things done outside lazygit.
+  </Card>
+  <Card title="Custom commands" icon="terminal" href="/configuration/custom-commands">
+    Extend lazygit with your own keybindings that run arbitrary shell commands.
+  </Card>
+</CardGroup>
+
+## Key features at a glance
+
+- **Interactive staging** — Stage individual lines, hunks, or entire files with a keystroke
+- **Interactive rebase** — Squash, fixup, drop, reorder, and edit commits visually
+- **Cherry-pick** — Copy commits across branches with `shift+c` / `shift+v`
+- **Undo/Redo** — Step back through any git action using the reflog (`z` / `shift+z`)
+- **Worktrees** — Manage multiple working trees for parallel branch work
+- **Custom patches** — Build patches from old commits and apply them elsewhere
+- **Stacked branches** — Full support for `rebase.updateRefs` stacked branch workflows
+- **Custom commands** — Define your own keybindings backed by shell commands
+- **Custom pagers** — Integrate delta, diff-so-fancy, ydiff, and more
+- **GitHub PR integration** — See PR status for branches directly in lazygit (requires `gh`)
+
+## Getting started
+
+<Steps>
+  <Step title="Install lazygit">
+    Install via Homebrew, your distro's package manager, or download a binary release. See the [installation guide](/installation).
+  </Step>
+  <Step title="Open a git repository">
+    Navigate to any git repository in your terminal and run `lazygit`.
+  </Step>
+  <Step title="Explore the interface">
+    The left panel shows status, files, branches, commits, and stash. The right panel shows diffs. Press `?` at any time to view keybindings.
+  </Step>
+  <Step title="Customize to your workflow">
+    Configure keybindings, add custom commands, and set up your preferred pager. See the [configuration guide](/configuration/overview).
+  </Step>
+</Steps>

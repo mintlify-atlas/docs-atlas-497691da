@@ -1,0 +1,128 @@
+---
+title: "Staging"
+description: "Stage individual lines, hunks, or entire files with precision — without touching patch files or arcane git commands."
+---
+
+Interactive staging is one of lazygit's most powerful features. Instead of running `git add -p` and stepping through prompts, you navigate diffs visually and stage exactly what you want with single keypresses.
+
+## The Files panel
+
+The **Files** panel (second panel from the left) shows all modified, untracked, and staged files in your working tree. Each file is marked with its status: staged, unstaged, or partially staged.
+
+### Staging entire files
+
+| Key | Action |
+|-----|--------|
+| `space` | Toggle staged/unstaged for the selected file |
+| `a` | Toggle staged/unstaged for all files in the working tree |
+| `d` | View discard options for the selected file |
+| `D` | View reset options for the entire working tree (including "nuke" to discard everything) |
+
+<Tip>
+Press `shift+d` then select **Nuke working tree** to discard all changes — staged, unstaged, and dirty submodules — in one step.
+</Tip>
+
+### Filtering the files view
+
+Press `<c-b>` to filter files by status — showing only staged or only unstaged files. Press `/` to search files by name within the current view.
+
+## The patch staging view
+
+Press `enter` on any file in the Files panel to open the **patch staging view** — a line-by-line diff where you can stage or unstage individual hunks and lines.
+
+<Steps>
+  <Step title="Open the staging view">
+    Navigate to a file in the Files panel and press `enter`. The right panel switches to a staging diff.
+  </Step>
+  <Step title="Navigate hunks">
+    Press `left` / `right` to jump between hunks within the file.
+  </Step>
+  <Step title="Toggle between staged and unstaged">
+    Press `tab` to switch between the unstaged view and the staged view. This lets you review exactly what will be committed.
+  </Step>
+  <Step title="Stage what you want">
+    Move to a line or hunk and press `space` to stage or unstage it. Use `a` to toggle between line-by-line and hunk selection mode.
+  </Step>
+  <Step title="Commit or return">
+    Press `c` to commit directly from the staging view, or `esc` to return to the Files panel.
+  </Step>
+</Steps>
+
+### Staging view keybindings
+
+| Key | Action |
+|-----|--------|
+| `space` | Toggle selected lines/hunk staged or unstaged |
+| `a` | Toggle between line-by-line and hunk selection mode |
+| `v` | Toggle range select (sticky) |
+| `shift+down` / `shift+up` | Range select down / up (non-sticky) |
+| `left` / `right` | Go to previous / next hunk |
+| `tab` | Switch between staged and unstaged views |
+| `d` | Discard the selected unstaged change (or unstage a staged change) |
+| `E` | Edit the selected hunk in your external editor |
+| `c` | Commit staged changes |
+| `w` | Commit without running the pre-commit hook |
+| `C` | Commit using your `$GIT_EDITOR` |
+| `<c-f>` | Find the base commit for a fixup (auto-locate which commit to amend) |
+| `esc` | Return to the Files panel |
+| `/` | Search within the current view |
+
+## Range selection
+
+You can stage a range of lines or hunks in one action using range select. This works both in the Files panel (for selecting multiple files) and in the patch staging view (for selecting multiple lines).
+
+<AccordionGroup>
+  <Accordion title="Sticky range select (vim-style)">
+    Press `v` to start a range selection. Use the up/down arrow keys to expand the selection. Press `v` again to reset it. Then press the action key (e.g., `space`) to apply to the whole range.
+  </Accordion>
+  <Accordion title="Non-sticky range select">
+    Hold `shift` and press `up` or `down` to expand a selection without entering a modal mode. Press `up` or `down` without `shift` to reset the selection.
+  </Accordion>
+</AccordionGroup>
+
+Range select is supported for:
+- Staging / unstaging multiple files at once
+- Staging / unstaging multiple lines or hunks at once
+- Squashing or fixup-ing multiple commits at once
+- Cherry-picking multiple commits at once
+
+## Discarding changes
+
+<Warning>
+Discarding changes is irreversible for unstaged changes. Staged changes can be unstaged instead.
+</Warning>
+
+From the **Files** panel, press `d` on a file to view discard options:
+
+- **Discard unstaged changes** — reverts the file to its staged state
+- **Discard staged changes** — unstages and discards staged changes
+- **Nuke all changes** — resets the entire working tree to HEAD
+
+From the **patch staging view**, pressing `d` on an unstaged hunk discards just that hunk. Pressing `d` on a staged line unstages it instead.
+
+## Files panel keybindings reference
+
+| Key | Action |
+|-----|--------|
+| `space` | Toggle staged for selected file |
+| `a` | Stage / unstage all files |
+| `enter` | Open patch staging view for the selected file |
+| `c` | Commit staged changes |
+| `A` | Amend the last commit with currently staged changes |
+| `w` | Commit without pre-commit hook |
+| `C` | Commit using git editor |
+| `d` | View discard options |
+| `D` | View working tree reset options |
+| `e` | Open file in external editor |
+| `o` | Open file in default application |
+| `i` | Ignore or exclude the file |
+| `s` | Stash all changes |
+| `S` | View stash options |
+| `f` | Fetch from remote |
+| `r` | Refresh files |
+| `<c-b>` | Filter files by staged/unstaged status |
+| `` ` `` | Toggle between flat and tree file layout |
+| `-` | Collapse all directories |
+| `=` | Expand all directories |
+| `M` | View merge conflict options |
+| `/` | Filter files by text |

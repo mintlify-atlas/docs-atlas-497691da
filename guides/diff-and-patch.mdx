@@ -1,0 +1,121 @@
+---
+title: "Diffs and custom patches"
+description: "Control how diffs are displayed, build custom patches from commits, and compare any two refs side by side."
+---
+
+lazygit shows diffs in the main panel as you navigate commits, files, and branches. Several controls let you adjust how those diffs are displayed, and a custom patch system lets you extract, move, or reverse specific changes without editing files by hand.
+
+## Viewing diffs
+
+Selecting any of the following updates the diff shown in the main panel:
+
+- A **commit** in the commits panel — shows the changes introduced by that commit
+- A **file** in the files panel — shows the current working tree or staged diff for that file
+- A **branch** in the branches panel — shows the diff of the branch tip relative to its upstream
+
+### Adjusting diff context size
+
+By default, git shows a few lines of surrounding context around each change. You can adjust this:
+
+| Key | Action |
+|-----|--------|
+| `}` | Increase the number of context lines shown |
+| `{` | Decrease the number of context lines shown |
+
+The default can be set permanently in the configuration file with the key `git.diffContextSize`.
+
+### Toggling whitespace
+
+Press `ctrl+w` to toggle whether whitespace-only changes (spaces, tabs, blank lines) are shown in the diff. This is useful when reviewing code that has been reformatted or when an auto-formatter has touched lines you did not intend to change.
+
+The default behavior can be set with the key `git.ignoreWhitespaceInDiffView` in the configuration file.
+
+### Rename similarity threshold
+
+When git detects a file rename, it compares deleted and added files and calls it a rename if they are similar enough. You can adjust the similarity threshold lazygit uses:
+
+| Key | Action |
+|-----|--------|
+| `)` | Increase the rename similarity threshold |
+| `(` | Decrease the rename similarity threshold |
+
+A higher threshold means fewer pairs are treated as renames; a lower threshold catches more renames but may produce false positives. The default can be set with `git.renameSimilarityThreshold`.
+
+## Custom patches
+
+A custom patch is a user-assembled set of lines extracted from a commit. Once built, you can apply the patch in several ways: remove it from the original commit, apply it in reverse to the index, or apply it as a new commit.
+
+### Building a patch
+
+<Steps>
+  <Step title="Navigate to a commit's files">
+    In the commits panel, select a commit and press `enter` to view its files.
+  </Step>
+  <Step title="Select lines or files to include">
+    With a file selected, you have two options:
+
+    - Press `space` to toggle the entire file in or out of the patch.
+    - Press `enter` to open the file's diff in the main panel, then navigate to individual lines and press `space` to add or remove specific lines.
+    - Press `a` to add or remove all files in the commit to the patch at once.
+  </Step>
+  <Step title="Open the patch options menu">
+    Press `ctrl+p` to open the custom patch options menu.
+  </Step>
+  <Step title="Choose what to do with the patch">
+    The menu offers several actions:
+
+    | Option | Effect |
+    |--------|--------|
+    | Remove from commit | Rewrites the commit via an interactive rebase, with the patched lines deleted |
+    | Apply in reverse | Applies the patch's changes in the opposite direction (useful for reverting partial changes) |
+    | Apply to index | Stages the patch lines in the index without modifying any commit |
+  </Step>
+</Steps>
+
+<Tip>
+Custom patches are powerful for surgical cleanup of old commits — for example, removing a debug statement or a redundant comment from a commit deep in your branch history, without touching any other lines in that commit.
+</Tip>
+
+## Comparing two commits (diff mode)
+
+Diff mode lets you see the cumulative difference between any two commits, branches, or refs — not just the changes introduced by a single commit.
+
+<Steps>
+  <Step title="Mark the first ref">
+    In the commits panel (or branches panel), navigate to the commit or branch you want to diff against and press `W` (shift+w). A menu opens with diffing options. Select **Mark as diff base** (or the equivalent option shown) to set that ref as the base.
+  </Step>
+  <Step title="Select the second ref">
+    Navigate to any other commit or branch. The main panel now shows the diff between the marked ref and your current selection.
+  </Step>
+  <Step title="Inspect the diff">
+    The main panel shows the accumulated changes between the two refs. Press `enter` on a commit while in diff mode to see the files changed between those two points.
+  </Step>
+  <Step title="Adjust diff direction or exit">
+    Press `W` again to open the diff options menu. From there you can:
+
+    - **Reverse the diff direction** — swap which ref is the base and which is the target
+    - **Exit diff mode** — return to the normal single-commit diff view
+
+    You can also press `escape` at any time to exit diff mode.
+  </Step>
+</Steps>
+
+<Note>
+Diff mode works across panels. You can mark a branch in the branches panel, then switch to the commits panel and select a commit to compare them.
+</Note>
+
+## Keybinding reference
+
+| Key | Action |
+|-----|--------|
+| `}` | Increase diff context size |
+| `{` | Decrease diff context size |
+| `ctrl+w` | Toggle whitespace in diff view |
+| `)` | Increase rename similarity threshold |
+| `(` | Decrease rename similarity threshold |
+| `enter` | View a commit's files (from the commits panel) |
+| `space` | Toggle a file or line in/out of the custom patch |
+| `a` | Add/remove all files in a commit to the custom patch |
+| `ctrl+p` | Open the custom patch options menu |
+| `W` | Open diff mode options / mark a commit as the diff base |
+| `escape` | Exit diff mode |

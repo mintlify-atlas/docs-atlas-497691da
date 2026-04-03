@@ -1,0 +1,261 @@
+---
+title: "Keybindings"
+description: "Remap default keys, disable bindings you don't use, and understand how lazygit's context-based keybinding system works."
+---
+
+lazygit uses a context-based keybinding system. Every key is bound within a specific context — which panel or mode is active — so the same key can do different things in different contexts. You override bindings in the `keybinding:` section of your `config.yml`.
+
+<Tip>
+  Press `?` in lazygit at any time to view all active keybindings for the current context.
+</Tip>
+
+## Overriding default keybindings
+
+Add a `keybinding:` block to your `config.yml` and specify only the bindings you want to change:
+
+```yaml
+keybinding:
+  universal:
+    quit: q
+    scrollUpMain: <pgup>
+    scrollDownMain: <pgdown>
+  commits:
+    squashDown: s
+    renameCommit: r
+```
+
+You don't need to include every binding — only the ones you're changing.
+
+## Disabling a keybinding
+
+Set a binding to `<disabled>` to remove it entirely:
+
+```yaml
+keybinding:
+  universal:
+    edit: <disabled>
+```
+
+This is useful when a default binding conflicts with something you've defined in a custom command.
+
+## Key format reference
+
+Single letters are written as-is. Special keys use angle-bracket notation:
+
+| Syntax | Key |
+|--------|-----|
+| `<f1>` through `<f12>` | Function keys |
+| `<insert>`, `<delete>` | Insert / Delete |
+| `<home>`, `<end>` | Home / End |
+| `<pgup>`, `<pgdown>` | Page Up / Page Down |
+| `<up>`, `<down>`, `<left>`, `<right>` | Arrow keys |
+| `<s-up>`, `<s-down>` | Shift + Arrow |
+| `<tab>`, `<backtab>` | Tab / Shift-Tab |
+| `<enter>` | Enter |
+| `<esc>` | Escape |
+| `<backspace>` | Backspace |
+| `<space>` | Space |
+| `<c-a>` through `<c-z>` | Ctrl+letter |
+| `<a-enter>` | Alt+Enter |
+| `<c-space>`, `<c-/>` | Ctrl+Space, Ctrl+Slash |
+| `<disabled>` | Disables the binding |
+
+## Keybinding contexts
+
+### universal
+
+Applies everywhere in lazygit.
+
+| Action | Default |
+|--------|---------|
+| `quit` | `q` |
+| `quit-alt1` | `<c-c>` |
+| `return` | `<esc>` |
+| `togglePanel` | `<tab>` |
+| `prevItem` / `nextItem` | `<up>` / `<down>` |
+| `prevItem-alt` / `nextItem-alt` | `k` / `j` |
+| `prevPage` / `nextPage` | `,` / `.` |
+| `gotoTop` / `gotoBottom` | `<` / `>` |
+| `scrollUpMain` / `scrollDownMain` | `<pgup>` / `<pgdown>` |
+| `scrollUpMain-alt1` / `scrollDownMain-alt1` | `K` / `J` |
+| `scrollUpMain-alt2` / `scrollDownMain-alt2` | `<c-u>` / `<c-d>` |
+| `select` | `<space>` |
+| `goInto` | `<enter>` |
+| `edit` | `e` |
+| `remove` | `d` |
+| `new` | `n` |
+| `startSearch` | `/` |
+| `nextMatch` / `prevMatch` | `n` / `N` |
+| `undo` / `redo` | `z` / `Z` |
+| `pushFiles` | `P` |
+| `pullFiles` | `p` |
+| `refresh` | `R` |
+| `nextTab` / `prevTab` | `]` / `[` |
+| `nextScreenMode` / `prevScreenMode` | `+` / `_` |
+| `cyclePagers` | `\|` |
+| `copyToClipboard` | `<c-o>` |
+| `filteringMenu` | `<c-s>` |
+| `diffingMenu` | `W` |
+| `executeShellCommand` | `:` |
+| `openDiffTool` | `<c-t>` |
+
+### status
+
+| Action | Default |
+|--------|---------|
+| `checkForUpdate` | `u` |
+| `recentRepos` | `<enter>` |
+| `allBranchesLogGraph` | `a` |
+
+### files
+
+| Action | Default |
+|--------|---------|
+| `commitChanges` | `c` |
+| `commitChangesWithEditor` | `C` |
+| `amendLastCommit` | `A` |
+| `commitChangesWithoutHook` | `w` |
+| `ignoreFile` | `i` |
+| `toggleStagedAll` | `a` |
+| `stashAllChanges` | `s` |
+| `viewStashOptions` | `S` |
+| `viewResetOptions` | `D` |
+| `refreshFiles` | `r` |
+| `fetch` | `f` |
+| `toggleTreeView` | `` ` `` |
+| `openMergeOptions` | `M` |
+| `findBaseCommitForFixup` | `<c-f>` |
+
+### branches
+
+| Action | Default |
+|--------|---------|
+| `checkoutBranchByName` | `c` |
+| `forceCheckoutBranch` | `F` |
+| `rebaseBranch` | `r` |
+| `mergeIntoCurrentBranch` | `M` |
+| `renameBranch` | `R` |
+| `createPullRequest` | `o` |
+| `fastForward` | `f` |
+| `createTag` | `T` |
+| `pushTag` | `P` |
+| `setUpstream` | `u` |
+| `viewGitFlowOptions` | `i` |
+| `sortOrder` | `s` |
+
+### commits
+
+| Action | Default |
+|--------|---------|
+| `squashDown` | `s` |
+| `renameCommit` | `r` |
+| `renameCommitWithEditor` | `R` |
+| `amendToCommit` | `A` |
+| `viewResetOptions` | `g` |
+| `markCommitAsFixup` | `f` |
+| `createFixupCommit` | `F` |
+| `squashAboveCommits` | `S` |
+| `moveDownCommit` / `moveUpCommit` | `<c-j>` / `<c-k>` |
+| `cherryPickCopy` | `C` |
+| `pasteCommits` | `V` |
+| `revertCommit` | `t` |
+| `tagCommit` | `T` |
+| `checkoutCommit` | `<space>` |
+| `openLogMenu` | `<c-l>` |
+| `startInteractiveRebase` | `i` |
+| `viewBisectOptions` | `b` |
+
+### stash
+
+| Action | Default |
+|--------|---------|
+| `popStash` | `g` |
+| `renameStash` | `r` |
+
+### main
+
+| Action | Default |
+|--------|---------|
+| `toggleSelectHunk` | `a` |
+| `pickBothHunks` | `b` |
+| `editSelectHunk` | `E` |
+
+### submodules
+
+| Action | Default |
+|--------|---------|
+| `init` | `i` |
+| `update` | `u` |
+| `bulkMenu` | `b` |
+
+## Remapping examples
+
+### Colemak layout
+
+```yaml
+keybinding:
+  universal:
+    prevItem-alt: 'u'
+    nextItem-alt: 'e'
+    prevBlock-alt: 'n'
+    nextBlock-alt: 'i'
+    nextMatch: '='
+    prevMatch: '-'
+    new: 'k'
+    edit: 'o'
+    openFile: 'O'
+    scrollUpMain-alt1: 'U'
+    scrollDownMain-alt1: 'E'
+    scrollUpMain-alt2: '<c-u>'
+    scrollDownMain-alt2: '<c-e>'
+    undo: 'l'
+    redo: '<c-r>'
+    diffingMenu: 'M'
+    filteringMenu: '<c-f>'
+  files:
+    ignoreFile: 'I'
+  commits:
+    moveDownCommit: '<c-e>'
+    moveUpCommit: '<c-u>'
+  branches:
+    viewGitFlowOptions: 'I'
+    setUpstream: 'U'
+```
+
+### Vim-style navigation (already default)
+
+lazygit already supports `j`/`k` for up/down and `h`/`l` for left/right by default. To make these the *only* way to navigate (disabling arrow keys):
+
+```yaml
+keybinding:
+  universal:
+    prevItem: <disabled>
+    nextItem: <disabled>
+    prevBlock: <disabled>
+    nextBlock: <disabled>
+```
+
+### Disable the edit keybinding
+
+If you prefer to open files with a custom command instead:
+
+```yaml
+keybinding:
+  universal:
+    edit: <disabled>
+    openFile: <disabled>
+```
+
+## Custom commands in the keybindings menu
+
+Custom commands you define in `customCommands:` automatically appear in the `?` keybindings menu alongside the built-in bindings, within the context you assigned them to. Adding a `description:` field makes the entry more readable:
+
+```yaml
+customCommands:
+  - key: '<c-r>'
+    context: 'commits'
+    command: 'hub browse -- "commit/{{.SelectedLocalCommit.Hash}}"'
+    description: 'Open commit on GitHub'
+```
+
+See the [custom commands page](/configuration/custom-commands) for full documentation.

@@ -1,0 +1,72 @@
+---
+title: "Undoing and redoing"
+description: "Use lazygit's reflog-powered undo and redo to recover from any git mistake, including actions taken outside of lazygit."
+---
+
+lazygit lets you undo the last git action with `z` and redo it with `Z`. Under the hood, both operations read the reflog — the same low-level history git uses to track every move your HEAD pointer makes.
+
+## How it works
+
+When you press `z`, lazygit inspects the reflog and figures out what the previous state was, then runs the appropriate git commands to get you back there:
+
+- If the last reflog entry was a **branch checkout**, lazygit checks out the original branch.
+- If the last entry was a **commit being applied**, lazygit resets back to the commit before it.
+- If the last entry was an **interactive rebase**, lazygit walks back to the commit you were on before the rebase started.
+
+You never have to read the reflog yourself. lazygit translates it into discrete, reversible steps.
+
+## Undoing things done outside lazygit
+
+Because the mechanism is the reflog — not an internal action log — it does not matter how you made the change. If you ran `git reset --hard`, `git rebase`, or `git commit` directly on the command line, lazygit can still undo it.
+
+<Tip>
+You can open lazygit for the first time in an existing repo and immediately start pressing `z` to walk back recent actions.
+</Tip>
+
+## Persistent undo history
+
+lazygit marks its own undo and redo operations as entries in the reflog. This means the undo history persists across sessions. If you close lazygit and reopen it later, `z` picks up exactly where you left off.
+
+## What can be undone
+
+<CardGroup cols={2}>
+  <Card title="Commits" icon="circle-check">
+    Creating, amending, dropping, or reordering commits via interactive rebase.
+  </Card>
+  <Card title="Branch operations" icon="circle-check">
+    Hard resets, merges, and branch checkouts.
+  </Card>
+  <Card title="Interactive rebases" icon="circle-check">
+    Squash, fixup, reword, and other rebase steps that modify the commit graph.
+  </Card>
+  <Card title="Actions done outside lazygit" icon="circle-check">
+    Any git command that creates a reflog entry, regardless of where it was run.
+  </Card>
+</CardGroup>
+
+## What cannot be undone
+
+<Warning>
+The reflog only tracks commits and branch movements. The following are not covered:
+</Warning>
+
+- **Working tree changes** — Edits to files that have not been committed are not in the reflog and cannot be recovered with `z`.
+- **Stash changes** — Stash entries are not reflog entries; `z` will not restore a dropped stash.
+- **Pushes to a remote** — Pushing is a network operation. lazygit can undo the local state, but the remote already has the commits.
+- **Branch creation** — Creating a branch does not appear in the reflog, so `z` will not delete the newly created branch.
+
+## Limitations during a rebase
+
+If you are mid-rebase, undo and redo are disabled. The reflog does not contain enough granular information about what has happened inside an in-progress rebase for lazygit to step back safely.
+
+<Note>
+To escape a rebase that has gone wrong, abort it instead. Press `m` to open the merge/rebase options menu and choose **Abort**.
+</Note>
+
+## Keybinding reference
+
+| Key | Action |
+|-----|--------|
+| `z` | Undo the last git action |
+| `Z` | Redo the last undone action |
+| `m` | View merge/rebase options (abort, continue, skip) |

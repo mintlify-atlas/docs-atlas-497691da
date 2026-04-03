@@ -1,0 +1,177 @@
+---
+title: "Commits"
+description: "Create, amend, reword, drop, cherry-pick, and inspect commits — all from the keyboard."
+---
+
+The **Commits** panel shows the full commit history for the current branch. From here you can make new commits, amend old ones, rearrange history, cherry-pick across branches, and bisect to find bugs.
+
+## Making a commit
+
+<Steps>
+  <Step title="Stage your changes">
+    In the **Files** panel, press `space` on files to stage them, or press `enter` to open the patch staging view and stage individual lines.
+  </Step>
+  <Step title="Open the commit prompt">
+    Press `c` in the Files panel (or `c` from the staging view) to open the commit message prompt.
+  </Step>
+  <Step title="Write your commit message">
+    Type your commit message. Press `enter` to confirm and create the commit.
+  </Step>
+</Steps>
+
+<Tip>
+Press `C` (uppercase) to open the commit message in your `$GIT_EDITOR` — useful for multi-line messages with a proper editor experience.
+</Tip>
+
+### Commit options from the Files panel
+
+| Key | Action |
+|-----|--------|
+| `c` | Commit staged changes |
+| `w` | Commit without running the pre-commit hook |
+| `C` | Commit using your git editor |
+| `A` | Amend the last commit with currently staged changes |
+| `<c-f>` | Find the base commit for a fixup automatically |
+
+## Amending commits
+
+### Amending the last commit
+
+Press `A` in the **Files** panel to amend HEAD with your currently staged changes. This is equivalent to `git commit --amend`.
+
+### Amending an older commit
+
+Press `shift+a` (shown as `A` in the commits panel) on any commit in the **Commits** panel to amend it with your currently staged changes. lazygit runs an interactive rebase in the background, so you don't need to do anything else — just confirm.
+
+<Note>
+Amending an old commit rewrites history. Avoid doing this on commits that have already been pushed to a shared remote.
+</Note>
+
+## Rewording commit messages
+
+Press `r` on any commit in the **Commits** panel to reword its message inline. Press `R` to open the message in your external editor instead.
+
+## Dropping commits
+
+Press `d` on a commit to drop (remove) it from the branch. lazygit runs an interactive rebase to remove the commit. If later commits depend on the dropped commit's changes, you may need to resolve merge conflicts.
+
+## Moving commits
+
+| Key | Action |
+|-----|--------|
+| `ctrl+k` | Move the selected commit up one position |
+| `ctrl+j` | Move the selected commit down one position |
+
+Use range select (`v` or `shift+up`/`shift+down`) to move multiple commits at once.
+
+## Cherry-picking
+
+Cherry-pick lets you copy commits from one branch and apply them to another.
+
+<Steps>
+  <Step title="Mark commits to copy">
+    In the **Commits** panel, press `shift+c` (shown as `C`) on a commit to mark it for cherry-picking. The commit will be highlighted. You can mark multiple commits.
+  </Step>
+  <Step title="Switch to the target branch">
+    Check out the branch where you want to apply the commits.
+  </Step>
+  <Step title="Paste the commits">
+    Press `shift+v` (shown as `V`) in the **Commits** panel to paste (cherry-pick) all marked commits.
+  </Step>
+  <Step title="Cancel if needed">
+    Press `esc` at any time to cancel the cherry-pick selection.
+  </Step>
+</Steps>
+
+<Tip>
+Use range select to mark multiple commits for cherry-picking in one step.
+</Tip>
+
+## Commit colors
+
+Commit colors in the Commits panel indicate the relationship between a commit and your branches:
+
+| Color | Meaning |
+|-------|---------|
+| Green | Included in the master branch |
+| Yellow | Not yet included in master |
+| Red | Not pushed to the upstream remote branch |
+
+## The commit graph
+
+When the Commits panel is in a larger screen mode, the commit graph is displayed alongside commit messages. Colors in the graph correspond to commit authors, and the parent commits of the selected commit are highlighted as you navigate.
+
+Use `+` and `_` to cycle through screen modes (normal, half, fullscreen). Enlarging the Commits panel reveals the full graph.
+
+## Comparing two commits
+
+<Steps>
+  <Step title="Mark the first commit">
+    Press `shift+w` on a commit or branch ref to open the diff menu and mark it as the base for comparison.
+  </Step>
+  <Step title="Navigate to the second commit">
+    Move to any other commit. The diff between the two commits is shown in the main view.
+  </Step>
+  <Step title="View changed files">
+    Press `enter` to see the list of files changed between the two commits.
+  </Step>
+  <Step title="Exit diff mode">
+    Press `shift+w` to open the diff menu again (options include reversing the diff direction and exiting), or press `esc` to exit diff mode.
+  </Step>
+</Steps>
+
+## Bisect
+
+Git bisect helps you find the commit that introduced a bug by binary searching through history.
+
+<Steps>
+  <Step title="Open bisect options">
+    Press `b` on a commit in the **Commits** panel to open the bisect menu.
+  </Step>
+  <Step title="Mark as good or bad">
+    Mark the selected commit as **good** (no bug) or **bad** (bug present). lazygit will check out the next commit for you to test.
+  </Step>
+  <Step title="Continue bisecting">
+    Keep marking commits as good or bad until git identifies the first bad commit.
+  </Step>
+</Steps>
+
+## Commits panel keybindings reference
+
+| Key | Action |
+|-----|--------|
+| `r` | Reword commit message |
+| `R` | Reword commit message with editor |
+| `d` | Drop commit |
+| `e` | Edit commit / start interactive rebase from here |
+| `i` | Start interactive rebase for all branch commits |
+| `s` | Squash commit into the one below it |
+| `f` | Fixup commit into the one below (discards message) |
+| `F` | Create a `fixup!` commit for the selected commit |
+| `S` | Apply all `fixup!` commits above (autosquash) |
+| `A` | Amend commit with staged changes (runs `git commit --amend` for HEAD, interactive rebase for older commits) |
+| `a` | Amend commit author or set co-author |
+| `ctrl+k` | Move commit up |
+| `ctrl+j` | Move commit down |
+| `C` | Mark commit for cherry-pick (copy) |
+| `V` | Paste (cherry-pick) copied commits |
+| `ctrl+r` | Reset cherry-pick selection |
+| `b` | View bisect options |
+| `t` | Create a revert commit |
+| `T` | Tag the selected commit |
+| `n` | Create a new branch from the commit |
+| `N` | Move unpushed commits to a new branch |
+| `g` | Reset (soft/mixed/hard) to the selected commit |
+| `space` | Checkout the commit as detached HEAD |
+| `enter` | View files changed in the commit |
+| `shift+w` | Open diff menu (compare two commits) |
+| `W` | View diffing options |
+| `ctrl+l` | View log options (sort order, graph display) |
+| `y` | Copy commit attribute to clipboard |
+| `o` | Open commit in browser |
+| `ctrl+o` | Copy abbreviated commit hash to clipboard |
+| `p` | Pick (during interactive rebase) |
+| `B` | Mark as base commit for rebase |
+| `z` | Undo last action |
+| `shift+z` | Redo |
+| `/` | Search commits by text |

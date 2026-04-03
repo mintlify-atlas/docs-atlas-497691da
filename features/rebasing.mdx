@@ -1,0 +1,161 @@
+---
+title: "Rebasing"
+description: "Squash, fixup, drop, reorder, and edit commits interactively — plus rebase-onto, custom patches, and merge conflict resolution."
+---
+
+lazygit makes interactive rebasing visual and keyboard-driven. Instead of editing a TODO file in your editor, you press single keys to squash, drop, reorder, and edit commits in place.
+
+## Starting an interactive rebase
+
+<Steps>
+  <Step title="Open the Commits panel">
+    Navigate to the **Commits** panel. You'll see your branch's commits listed newest-first.
+  </Step>
+  <Step title="Start the rebase">
+    Press `i` to start an interactive rebase covering all commits on your branch (from HEAD down to the first merge commit or main branch commit).
+
+    Alternatively, press `e` on a specific commit to start an interactive rebase beginning at that commit.
+  </Step>
+  <Step title="Apply rebase actions">
+    Press the action key on any commit marked as TODO. Actions take effect when you continue the rebase.
+  </Step>
+  <Step title="Continue the rebase">
+    Press `m` to open the merge/rebase options menu, then select **Continue**. If there are conflicts, resolve them first.
+  </Step>
+</Steps>
+
+<Note>
+You can also perform rebase actions as one-offs without explicitly starting a rebase. For example, pressing `s` on a commit immediately squashes it without entering a multi-step rebase session.
+</Note>
+
+## Rebase actions
+
+These actions are available in the **Commits** panel on any commit:
+
+| Key | Action | Description |
+|-----|--------|-------------|
+| `s` | Squash | Squash the commit into the one below it. The commit's message is appended to the target's message. |
+| `f` | Fixup | Meld the commit into the one below it. The commit's message is discarded. |
+| `d` | Drop | Remove the commit entirely from the branch. |
+| `e` | Edit | Pause the rebase at this commit, allowing you to make changes before continuing. |
+| `r` | Reword | Change the commit's message. |
+| `R` | Reword with editor | Open the commit message in your external editor. |
+| `p` | Pick | Keep the commit as-is (used during an active rebase to un-mark). |
+| `A` | Amend | Amend the commit with currently staged changes. |
+| `F` | Create fixup commit | Create a `fixup!` commit targeting the selected commit. |
+| `S` | Apply fixup commits | Autosquash all `fixup!` commits above the selected commit. |
+
+## Moving commits
+
+Reorder commits by moving them up or down in the Commits panel:
+
+| Key | Action |
+|-----|--------|
+| `ctrl+k` | Move the selected commit up one position |
+| `ctrl+j` | Move the selected commit down one position |
+
+Select a range of commits with `v` (sticky) or `shift+up`/`shift+down` (non-sticky) and then press `ctrl+k` or `ctrl+j` to move the entire range at once.
+
+## Continuing, aborting, and skipping
+
+While a rebase or merge is in progress, press `m` from any panel to open the merge/rebase options:
+
+- **Continue** — proceed past the current step (after resolving conflicts or making edits)
+- **Abort** — cancel the rebase and return to the pre-rebase state
+- **Skip** — skip the current commit and continue with the rest
+
+## Rebasing onto another branch
+
+To rebase your current branch onto a different base branch:
+
+<Steps>
+  <Step title="Go to the Branches panel">
+    Navigate to the branch you want to rebase onto.
+  </Step>
+  <Step title="Press r">
+    Press `r` on the target branch. lazygit runs `git rebase <target-branch>` for the currently checked-out branch.
+  </Step>
+</Steps>
+
+## Rebase from a marked base commit
+
+This workflow is useful when your feature branch was branched off a topic branch (e.g., `develop`), and you want to rebase only your feature commits onto a different base (e.g., `master`).
+
+<Steps>
+  <Step title="Find the last commit from the old base">
+    In the **Commits** panel, navigate to the last commit that belongs to the old base branch — the commit just before your feature commits begin.
+  </Step>
+  <Step title="Mark it as the base commit">
+    Press `shift+b` (shown as `B`) on that commit to mark it as the rebase base. lazygit highlights it.
+  </Step>
+  <Step title="Rebase onto the new target">
+    Navigate to the **Branches** panel, select the new target branch, and press `r`. lazygit runs `git rebase --onto <target> <marked-base>`, bringing only your feature commits across.
+  </Step>
+</Steps>
+
+## Rebase magic: custom patches
+
+Custom patches let you extract specific lines from any commit and then remove, move, or apply them elsewhere — without manually editing patch files.
+
+### Removing lines from an old commit
+
+<Steps>
+  <Step title="Navigate to the commit">
+    In the **Commits** panel, press `enter` on the commit to view its files.
+  </Step>
+  <Step title="Enter the file">
+    Press `enter` on a file to open the patch building view.
+  </Step>
+  <Step title="Select lines for the patch">
+    Press `space` on any line to add it to the custom patch. Use `v` for range select to add multiple lines. Use `a` to add the entire hunk.
+  </Step>
+  <Step title="Apply patch options">
+    Press `ctrl+p` to view custom patch options:
+    - **Remove patch from commit** — removes those lines from the commit (reruns the rebase)
+    - **Apply patch** — apply the patch to the working tree
+    - **Apply patch in reverse** — apply the patch in reverse to the index
+    - **Move patch to new commit** — extracts the patch into a separate commit
+    - **Move patch to index** — moves the patch out of the commit and into staged changes
+  </Step>
+</Steps>
+
+<Tip>
+Custom patches are ideal for splitting a commit that does two unrelated things: select one part as a patch, move it to a new commit, and you're done.
+</Tip>
+
+### Patch building view keybindings
+
+| Key | Action |
+|-----|--------|
+| `space` | Toggle lines in the patch |
+| `a` | Toggle hunk selection mode (line-by-line vs. whole hunk) |
+| `v` | Toggle range select |
+| `left` / `right` | Go to previous / next hunk |
+| `d` | Remove selected lines from the commit |
+| `ctrl+p` | View custom patch options |
+| `esc` | Exit patch builder |
+
+## Merge conflict resolution
+
+When a rebase or merge produces conflicts, lazygit switches to the **merging** view automatically.
+
+| Key | Action |
+|-----|--------|
+| `space` | Pick the selected hunk (choose ours or theirs) |
+| `b` | Pick all hunks at once |
+| `up` / `down` | Previous / next hunk |
+| `left` / `right` | Previous / next conflict |
+| `z` | Undo the last conflict resolution |
+| `e` | Open the conflicted file in your external editor |
+| `M` | View merge conflict options |
+| `esc` | Return to the Files panel |
+
+After resolving all conflicts, press `m` to continue the rebase.
+
+## Undo and redo
+
+All rebase actions can be undone with `z` (undo) and redone with `shift+z` (redo). lazygit uses the reflog to reverse git operations.
+
+<Note>
+Undo works for commit-level operations (rebase, amend, drop, etc.). It does not undo changes to your working tree or stash.
+</Note>

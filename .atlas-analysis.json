@@ -1,0 +1,85 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "lazygit",
+  "projectDescription": "A simple terminal UI for git commands that makes complex git operations accessible through an intuitive keyboard-driven interface.",
+  "theme": "aspen",
+  "primaryColor": "#848484",
+  "lightColor": "#141414",
+  "darkColor": "#cbcbcb",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/staging",
+              "features/commits",
+              "features/branches",
+              "features/rebasing",
+              "features/worktrees"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/overview",
+              "configuration/keybindings",
+              "configuration/custom-commands",
+              "configuration/custom-pagers"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/undoing",
+              "guides/stacked-branches",
+              "guides/filtering-searching",
+              "guides/diff-and-patch"
+            ]
+          },
+          {
+            "group": "Contributing",
+            "pages": [
+              "contributing/overview",
+              "contributing/codebase-guide"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Interactive staging of individual lines and hunks",
+    "Interactive rebase with squash, fixup, drop, and edit operations",
+    "Cherry-pick commits across branches",
+    "Git bisect support for finding bugs",
+    "Undo/redo using git reflog",
+    "Custom command keybindings with template syntax",
+    "Worktree management for parallel branch work",
+    "Custom patch building and rebase magic",
+    "Stacked branches support with rebase.updateRefs",
+    "Custom pager integration (delta, diff-so-fancy, ydiff)",
+    "GitHub pull request integration via gh CLI",
+    "Commit graph visualization"
+  ],
+  "publicApiSurface": [
+    "lazygit (CLI entry point)",
+    "lazygit --debug",
+    "lazygit --logs",
+    "lazygit --work-tree <path>",
+    "lazygit --git-dir <path>",
+    "customCommands config key",
+    "keybinding contexts: global, files, branches, commits, stash, localBranches, remotes, tags, worktrees",
+    "config.yml: gui, git, update, refresher, reporting, splashUpdatesIndex, confirmOnQuit, quitOnTopLevelReturn, services, notARepository, promptToReturnFromSubprocess"
+  ]
+}
